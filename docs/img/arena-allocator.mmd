@@ -1,0 +1,7 @@
+flowchart LR
+    VMA["Reserved Virtual Region\n(virtual only)"] -->|commit| META_ARENA["Metagraph Arena"]
+    META_ARENA -->|sub-allocate| HDR_POOL["Header Pool\n64-byte blocks"]
+    META_ARENA --> EDGE_POOL["Edge Pool\n16-byte blocks"]
+    META_ARENA --> PROP_POOL["Property Slab\nvariable"]
+    EDGE_POOL --> THREAD_CACHE["Per-thread cache"]
+    PROP_POOL --> GC_SCAN["Scope stack"]

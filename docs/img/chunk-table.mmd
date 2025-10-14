@@ -1,0 +1,6 @@
+flowchart TB
+    classDef chunk fill:#f6f6f6,stroke:#333,stroke-width:1px
+    CHUNK0((("Chunk 0"))):::chunk --> CHUNK1((("Chunk 1"))):::chunk --> CHUNK2((("Chunk 2"))):::chunk
+    CHUNK0 -->|"offset (40b)"| DATA0["Graph Data"]
+    CHUNK1 -->|"offset (40b)"| DATA1["String Pool"]
+    CHUNK2 -->|"offset (40b)"| DATA2["Blob"]

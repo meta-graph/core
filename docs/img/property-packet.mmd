@@ -1,0 +1,7 @@
+flowchart TB
+    subgraph Packet["Property Packet"]
+        META["2 B length\\n1 B type\\nchecksum"]
+        PAYLOAD[("UTF-8/String/Blob")]
+    end
+    META --> PAYLOAD
+    Packet --> NEXT_PACKET

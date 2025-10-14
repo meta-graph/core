@@ -1,0 +1,19 @@
+graph TD
+    subgraph G0["Graph G₀"]
+        N1(("Node A"))
+        N2(("Node B"))
+        E1["Edge α"]
+    end
+    subgraph G1["Subgraph G₁ (Node A)"]
+        A1(("Asset 1"))
+        A2(("Asset 2"))
+        EA["Edge δ"]
+    end
+    subgraph G2["Edge α as Graph"]
+        EA1(("Transition"))
+        EA2(("Trigger"))
+    end
+    N1 -->|"contains"| G1
+    E1 -->|"is graph"| G2
+    N1 -->|"edge α"| N2
+    G1 -->|"edge δ"| A2

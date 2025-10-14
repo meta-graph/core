@@ -1,0 +1,8 @@
+graph TD
+    subgraph SWMR
+        WRITER["Single Writer"]
+        READERS["Multiple Readers"]
+    end
+    WRITER --> LOG["Write-Ahead Log"]
+    LOG --> READERS
+    READERS --> SNAPSHOT

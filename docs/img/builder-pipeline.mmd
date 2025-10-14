@@ -1,0 +1,12 @@
+graph LR
+    subgraph Inputs
+        RAW["Raw Assets"]
+        META[Metadata]
+        CONFIG[Transforms]
+    end
+    RAW --> STAGE["Stage Pipeline"]
+    META --> STAGE
+    CONFIG --> STAGE
+    STAGE --> PACK["Bundle Packager"]
+    PACK --> VERIFY["Integrity Check"]
+    VERIFY --> OUT[".grph Bundle"]

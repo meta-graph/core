@@ -1,0 +1,15 @@
+graph TD
+    subgraph Graph
+        HDR["64-byte Header"]
+        NODEIDX["ULEB128 Node Index"]
+        EDGEIDX["Edge Descriptors"]
+        PROP["Property Table"]
+    end
+    subgraph Node
+        REF["Chunk Ref"]
+        SUBG["Optional Subgraph"]
+    end
+    subgraph Edge
+        FROM --> TO
+        EDATA["Edge Graph"]
+    end

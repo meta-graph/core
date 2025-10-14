@@ -1,0 +1,6 @@
+flowchart LR
+    subgraph CacheLine
+        KEY[("Offset")] --> VALUE[("Pointer")]
+        KEY -.-> HASHFN["Fast Hash"]
+    end
+    CacheLine --> NEXT["Open addressing slot"]

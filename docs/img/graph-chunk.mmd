@@ -1,0 +1,7 @@
+flowchart TB
+    subgraph GraphChunk
+        LEN["Length 32 bits"]
+        KIND["Kind: graph"]
+        PAYLOAD[["Graph Header + Node Index + Edge Index + Properties"]]
+    end
+    LEN --> KIND --> PAYLOAD

@@ -1,0 +1,14 @@
+sequenceDiagram
+    participant Builder
+    participant Hasher
+    participant Merkle
+    participant Runtime
+
+    Builder->>Hasher: stream asset data
+    Hasher-->>Builder: BLAKE3 digest
+    Builder->>Merkle: insert leaf(digest)
+    Merkle-->>Builder: updated root
+    Builder->>Runtime: emit bundle (header + root)
+    Runtime->>Hasher: verify chunk digest on load
+    Runtime->>Merkle: reconstruct path (optional)
+    Runtime-->>Runtime: cache verified chunks

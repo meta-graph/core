@@ -1,0 +1,16 @@
+flowchart LR
+    subgraph Trusted
+        Domain["Core Metagraph"]
+        Traversal
+        Builder
+    end
+    subgraph SemiTrusted
+        Platform["Platform Layer"]
+        Loader
+    end
+    subgraph Untrusted
+        Input["Bundle Input"]
+        Transforms["External Tools"]
+    end
+    Input --> Loader --> Domain
+    Transforms --> Builder

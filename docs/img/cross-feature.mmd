@@ -1,0 +1,9 @@
+graph TD
+    F010 -->|"prim mutex"| F008
+    F010 -->|"fast clock"| F011
+    F011 -->|"result codes"| F002
+    F009 -->|"arenas"| F001
+    F001 -->|"graph serialization"| F002
+    F004 -->|"hash IDs"| F007
+    F003 -->|"pointer hydration"| F005
+    F005 -->|"traversal"| F012

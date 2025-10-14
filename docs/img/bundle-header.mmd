@@ -1,0 +1,7 @@
+flowchart LR
+    MAGIC{{"MAGIC\\n'GRPH'"}} --> VERSION["Version\\n1 B"]
+    VERSION --> FLAGS["Flags\\n3 B"]
+    FLAGS --> SIZE["_BitInt(64) total_size"]
+    SIZE --> ROOTIDX["_BitInt(64) root_chunk"]
+    ROOTIDX --> HASHROOT["BLAKE3 root\\n32 B"]
+    HASHROOT --> RESERVED["Reserved\\n32 B"]

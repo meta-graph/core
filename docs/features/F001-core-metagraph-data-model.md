@@ -20,7 +20,7 @@ It's all graphs, all the way down.
 
 ## User Stories
 
-### F001.US001 - Create Hypergraph Instance
+### F001.US001 - Create Metagraph Instance
 **As a** system developer
 **I want** to create and initialize mg instances
 **So that** I can represent complex asset dependency relationships
@@ -35,7 +35,7 @@ It's all graphs, all the way down.
 - Memory allocation is tracked and can be freed
 - Thread-safe creation and destruction
 
-### F001.US002 - Add Nodes to Hypergraph
+### F001.US002 - Add Nodes to Metagraph
 **As a** system developer
 **I want** to add nodes to a meta-graph with associated metadata
 **So that** I can represent individual assets in the dependency graph
@@ -51,9 +51,9 @@ It's all graphs, all the way down.
 - Memory efficient storage for large numbers of nodes
 - Duplicate node IDs are rejected with clear error
 
-### F001.US003 - Create Hyperedges
+### F001.US003 - Create Metagraph Edges
 **As a** system developer
-**I want** to create hyperedges connecting multiple nodes
+**I want** to create metaedges connecting multiple nodes
 **So that** I can represent complex dependency relationships where one asset depends on multiple others
 
 **Prerequisites:**
@@ -61,9 +61,9 @@ It's all graphs, all the way down.
 - Node IDs are valid and accessible
 
 **Acceptance Criteria:**
-- Can create hyperedges connecting 2 or more nodes
-- Hyperedges have type information (dependency, reference, etc.)
-- Hyperedges can have weights and properties
+- Can create Metaedges connecting 2 or more nodes
+- Metaedges have type information (dependency, reference, etc.)
+- Metaedges can have weights and properties
 - Efficient storage and lookup of edge relationships
 - Automatic validation that all referenced nodes exist
 
@@ -73,7 +73,7 @@ It's all graphs, all the way down.
 **So that** dependency resolution and asset loading is fast
 
 **Prerequisites:**
-- Hypergraph with nodes and edges exists
+- Metagraph with nodes and edges exists
 - Efficient indexing structures in place
 
 **Acceptance Criteria:**

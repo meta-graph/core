@@ -1,0 +1,7 @@
+flowchart LR
+    ReadyQueue{{"Ready Queue"}} --> Worker1["CPU Worker"]
+    ReadyQueue --> Worker2["GPU Worker"]
+    ReadyQueue --> Worker3["IO Worker"]
+    Worker1 --> CompleteQueue[("Completed")]
+    Worker2 --> CompleteQueue
+    Worker3 --> CompleteQueue

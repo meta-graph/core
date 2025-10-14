@@ -74,6 +74,7 @@ missing
 
 # IDE files (keep .vscode/ for shared development experience)
 .idea/
+.obsidian/
 *.swp
 *.swo
 *~

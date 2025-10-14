@@ -1,0 +1,18 @@
+sequenceDiagram
+    participant Loader
+    participant Hydrator
+    participant Cache as "Hydration Cache"
+    participant Snapshot as "Snapshot Epoch"
+
+    Loader->>Hydrator: request pointer(offset)
+    Hydrator-->>Cache: lookup(offset)
+    alt cache hit
+        Cache-->>Hydrator: pointer
+        Hydrator-->>Loader: pointer
+    else cache miss
+        Hydrator->>Snapshot: acquire epoch
+        Hydrator->>Loader: fault mapped page (if needed)
+        Hydrator->>Cache: store(offset, pointer)
+        Hydrator->>Snapshot: release epoch
+        Hydrator-->>Loader: pointer
+    end

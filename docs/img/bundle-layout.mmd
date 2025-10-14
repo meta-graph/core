@@ -1,0 +1,6 @@
+graph TD
+    HEADER["Packet: Bundle Header"] --> CHUNKTBL["Block: Chunk Table"]
+    CHUNKTBL --> GRAPHZONE["Region: Graph Chunks"]
+    CHUNKTBL --> STOREZONE["Region: Blob Store"]
+    CHUNKTBL --> STRINGZONE["Region: String Pool"]
+    CHUNKTBL --> HASHZONE["Region: Integrity"]

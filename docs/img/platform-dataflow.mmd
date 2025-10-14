@@ -1,0 +1,6 @@
+graph LR
+    IO["File I/O"] -- "file descriptor" --> MMAP["Memory Mapping"]
+    MMAP -- "mapped region" --> RESIDENT["Resident Pages"]
+    MEM["Memory Config"] -- "arena config" --> CORE["Core Pools"]
+    THREAD -- "thread affinity" --> ALG["Algorithms"]
+    TIME -- "timestamp" --> TRACE

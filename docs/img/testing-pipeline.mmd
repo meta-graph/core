@@ -1,0 +1,6 @@
+flowchart LR
+    Unit["Unit Tests"] --> CI[("CI Matrix")]
+    Integration --> CI
+    Fuzz --> Nightly["Nightly Jobs"]
+    Perf --> Benchmarks
+    Telemetry --> Dashboards

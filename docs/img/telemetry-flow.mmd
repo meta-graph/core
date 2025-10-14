@@ -1,0 +1,7 @@
+flowchart LR
+    TRACEBUF["Trace Ring Buffer"] --> EXPORTER[Exporter]
+    PERFCTR["Hardware Counters"] --> EXPORTER
+    EXPORTER --> JSON["JSON Metrics"]
+    EXPORTER --> MSGPACK["MessagePack"]
+    JSON --> DASH[Dashboards]
+    MSGPACK --> CLI["CLI Reports"]

@@ -1,0 +1,9 @@
+flowchart TB
+    subgraph TransformPacket
+        LEN[Length]
+        FLAGS[Flags]
+        HASH[Pipeline Hash]
+        STAGES[[Stage Table]]
+        PARAMS[[Parameter Blob]]
+    end
+    LEN --> FLAGS --> HASH --> STAGES --> PARAMS
