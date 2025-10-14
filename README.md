@@ -213,6 +213,7 @@ cmake --build build --target static-analysis
 - [Contributing Guidelines](CONTRIBUTING.md) - Development standards and workflow
 - [Feature Specifications](docs/features/) - Detailed technical documentation
 - [Architecture Blueprint](docs/architecture.md) - Performance-oriented system design and diagrams
+- [Recursive Meta-Graph Mathematics](docs/rmg-math.md) - Formal definition, recursion schemes, and theory correspondence
 - [Third-Party Integration](docs/3rd-party.md) - Library usage patterns
 - [Threat Model](docs/THREAT-MODEL.md) - Security considerations
 - [Release Process](docs/RELEASE.md) - Fort Knox-grade release workflow
