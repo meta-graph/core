@@ -18,6 +18,7 @@ This directory contains the complete feature specification for MetaGraph - the m
 | [F.010](F010-platform-abstraction.md) | Platform Abstraction | Foundation | None |
 | [F.011](F011-error-handling-validation.md) | Error Handling and Validation | Foundation | None |
 | [F.012](F012-bundle-creation-serialization.md) | Bundle Creation and Serialization | High | F.001, F.002, F.004, F.006, F.011 |
+| [F.013](F013-dpoi-qca-dynamics.md) | DPOI Matcher & QCA Evolution Loop | Critical | F.001, F.003, F.008, F.009, F.011 |
 
 ## Implementation Roadmap
 
@@ -42,6 +43,9 @@ This directory contains the complete feature specification for MetaGraph - the m
 
 ### Phase 5: Builder and Integration (Week 9)
 - F.012 - Bundle Creation and Serialization
+
+### Phase 6: Forge Dynamics (Week 10+)
+- F.013 - DPOI Matcher & QCA Evolution Loop
 
 ## Feature Dependencies
 
@@ -83,12 +87,18 @@ graph TD
     F004 --> F012
     F006 --> F012
 
+    F001 --> F013[F.013 DPOI & QCA Loop]
+    F003 --> F013
+    F008 --> F013
+    F009 --> F013
+    F011 --> F013
+
     classDef foundation fill:#e1f5fe
     classDef critical fill:#fff3e0
     classDef high fill:#f3e5f5
 
     class F010,F011 foundation
-    class F001,F002,F003,F005,F006,F007 critical
+    class F001,F002,F003,F005,F006,F007,F013 critical
     class F004,F008,F009,F012 high
 ```
 
