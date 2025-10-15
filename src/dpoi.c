@@ -25,6 +25,17 @@ static metagraph_result_t metagraph_match_set_grow(mg_match_set_t *set,
                                                    uint32_t min_capacity);
 static metagraph_result_t metagraph_prepare_match_buffer(mg_match_set_t *set);
 
+/**
+ * Ensure a match set has capacity for at least `min_capacity` entries.
+ *
+ * If the set's capacity is smaller than `min_capacity`, the underlying storage
+ * is resized and `set->data` and `set->capacity` are updated accordingly.
+ *
+ * @param set Match set to ensure capacity for.
+ * @param min_capacity Minimum required capacity (number of mg_match_t entries).
+ * @returns METAGRAPH_SUCCESS on success, or an error result on failure (for
+ *          example, out-of-memory if allocation fails).
+ */
 static metagraph_result_t metagraph_match_set_grow(mg_match_set_t *set,
                                                    uint32_t min_capacity) {
     if (set->capacity >= min_capacity) {
@@ -46,6 +57,15 @@ static metagraph_result_t metagraph_match_set_grow(mg_match_set_t *set,
     return METAGRAPH_SUCCESS;
 }
 
+/**
+ * Append a computed match for `rule` using the provided `image` into `set`, computing its ordering key and recording touched nodes.
+ *
+ * @param rule Source rule whose `rule_id` is recorded in the emitted match.
+ * @param image Array of graph node identifiers forming the match (length `count`).
+ * @param count Number of node identifiers in `image`.
+ * @param set Match buffer to which the new match will be appended; must be prepared prior to calling.
+ * @returns METAGRAPH_SUCCESS on success, or an error code on failure (for example, when memory allocation fails).
+ */
 static metagraph_result_t metagraph_emit_match(const mg_rule_t *rule,
                                                const mg_node_id_t *image,
                                                uint8_t count,
@@ -76,6 +96,18 @@ static metagraph_result_t metagraph_emit_match(const mg_rule_t *rule,
     return METAGRAPH_SUCCESS;
 }
 
+/**
+ * Find and emit matches for a rule that consists of a single node.
+ *
+ * For each graph node whose type equals the rule's required node type, appends
+ * a one-node mapping to the provided match set.
+ *
+ * @param graph Graph to search for matching nodes.
+ * @param rule  Rule whose single-node pattern (rule->L.node_type[0]) is used.
+ * @param set   Match set to append found matches into; must be prepared by the caller.
+ *
+ * @returns METAGRAPH_SUCCESS on success, or an error code propagated from match emission (e.g., out-of-memory).
+ */
 static metagraph_result_t metagraph_match_single_node(const mg_graph_t *graph,
                                                       const mg_rule_t *rule,
                                                       mg_match_set_t *set) {
@@ -91,6 +123,18 @@ static metagraph_result_t metagraph_match_single_node(const mg_graph_t *graph,
     return METAGRAPH_SUCCESS;
 }
 
+/**
+ * Find and emit matches for a two-node (one-edge) rule pattern in the given graph.
+ *
+ * Scans graph edges for ordered pairs where the source node has the rule's left-hand
+ * type and the target node has the rule's right-hand type, and appends a two-node
+ * mapping for each valid pair to the provided match set.
+ *
+ * @param graph Graph to search for matching node pairs.
+ * @param rule Rule whose two-node LHS/RHS types are used to filter matches.
+ * @param set Output match set to which discovered two-node matches are appended.
+ * @returns METAGRAPH_SUCCESS on success, or an error code propagated from match emission on failure.
+ */
 static metagraph_result_t metagraph_match_two_nodes(const mg_graph_t *graph,
                                                     const mg_rule_t *rule,
                                                     mg_match_set_t *set) {
@@ -122,6 +166,19 @@ static metagraph_result_t metagraph_match_two_nodes(const mg_graph_t *graph,
     return METAGRAPH_SUCCESS;
 }
 
+/**
+ * Generate candidate matches for a rule by scanning a rule-meta-graph's skeleton.
+ *
+ * Prepares the output match buffer and emits matches for simple rule arities:
+ * - single-node rules: emits one-node matches for graph nodes whose type matches the rule.
+ * - two-node one-edge rules: emits ordered node-pair matches for adjacent nodes matching lhs/rhs types.
+ *
+ * @param rmg Rule-meta-graph containing a skeleton graph to search; must not be NULL.
+ * @param rule Rule definition whose pattern will be matched; must not be NULL.
+ * @param arena Arena allocator (unused by this implementation; may be NULL).
+ * @param out_matches Match buffer to populate; must not be NULL.
+ * @returns METAGRAPH_SUCCESS on success. Propagates error codes from buffer preparation or allocation failures (e.g., out-of-memory) on failure.
+ */
 metagraph_result_t mg_dpoi_match_rmg(const mg_rmg_t *rmg, const mg_rule_t *rule,
                                      mg_arena_t *arena,
                                      mg_match_set_t *out_matches) {
@@ -147,6 +204,13 @@ metagraph_result_t mg_dpoi_match_rmg(const mg_rmg_t *rmg, const mg_rule_t *rule,
     return METAGRAPH_SUCCESS;
 }
 
+/**
+ * Compare two match records by their composite key: first `key_hi`, then `key_lo`.
+ *
+ * @param lhs Pointer to the first `mg_match_t`.
+ * @param rhs Pointer to the second `mg_match_t`.
+ * @returns `-1` if `lhs` is less than `rhs`, `1` if `lhs` is greater than `rhs`, `0` if they are equal.
+ */
 static int metagraph_match_compare(const void *lhs, const void *rhs) {
     const mg_match_t *left = (const mg_match_t *)lhs;
     const mg_match_t *right = (const mg_match_t *)rhs;
@@ -165,6 +229,17 @@ static int metagraph_match_compare(const void *lhs, const void *rhs) {
     return 0;
 }
 
+/**
+ * Ensure the match set has an initialized match buffer and resets its count.
+ *
+ * If the set already has an allocated data buffer, the function resets
+ * set->count to 0. Otherwise it allocates an initial array of
+ * METAGRAPH_INITIAL_MATCH_CAPACITY elements, sets set->capacity and
+ * set->count accordingly.
+ *
+ * @param set Match set whose buffer and counters will be initialized or reset.
+ * @returns METAGRAPH_SUCCESS on success, otherwise an out-of-memory error result.
+ */
 static metagraph_result_t metagraph_prepare_match_buffer(mg_match_set_t *set) {
     if (set->data != NULL) {
         set->count = 0U;
@@ -181,6 +256,13 @@ static metagraph_result_t metagraph_prepare_match_buffer(mg_match_set_t *set) {
     return METAGRAPH_SUCCESS;
 }
 
+/**
+ * Determine whether two matches share any touched node identifiers.
+ *
+ * @param lhs First match to compare; its touched_nodes array and tn count are used.
+ * @param rhs Second match to compare; its touched_nodes array and tn count are used.
+ * @returns `true` if the matches share at least one touched node identifier, `false` otherwise.
+ */
 static bool metagraph_matches_overlap(const mg_match_t *lhs,
                                       const mg_match_t *rhs) {
     for (uint16_t lhs_index = 0; lhs_index < lhs->tn; ++lhs_index) {
@@ -194,6 +276,17 @@ static bool metagraph_matches_overlap(const mg_match_t *lhs,
     return false;
 }
 
+/**
+ * Selects a maximal subset of non-overlapping matches from the provided match set.
+ *
+ * Sorts the matches by their composite key and then retains, in-place, the first
+ * set of matches that do not overlap on any touched node. The function updates
+ * matches->count to reflect the number of matches kept.
+ *
+ * @param matches Match set to reduce; modified in-place. If `matches` is NULL
+ *                or contains zero or one entry, the function returns without
+ *                making changes.
+ */
 void mg_dpoi_schedule_maximal(mg_match_set_t *matches) {
     if (!matches || matches->count <= 1U) {
         return;
@@ -222,6 +315,15 @@ void mg_dpoi_schedule_maximal(mg_match_set_t *matches) {
     matches->count = kept;
 }
 
+/**
+ * Commit a set of scheduled matches to the graph.
+ *
+ * @param graph Target graph to apply the scheduled matches to.
+ * @param rules Array of rules corresponding to the matches in `schedule`.
+ * @param rule_count Number of rules in `rules`.
+ * @param schedule Set of matches to commit to `graph`.
+ * @returns METAGRAPH_SUCCESS on success, or an error code on failure.
+ */
 metagraph_result_t mg_dpo_commit(mg_graph_t *graph, const mg_rule_t *rules,
                                  uint32_t rule_count,
                                  const mg_match_set_t *schedule) {

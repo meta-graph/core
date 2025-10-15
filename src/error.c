@@ -106,6 +106,14 @@ _Static_assert(sizeof(METAGRAPH_ERROR_STRINGS) /
 #define METAGRAPH_ATTR_COLD_CONST
 #endif
 
+/**
+ * Map a metagraph_result_t code to a human-readable message.
+ *
+ * @param result Error code to translate.
+ * @returns Pointer to a static, null-terminated message string corresponding to `result`.
+ *          Returns "User-defined error" if `result` falls in the user-defined error range,
+ *          or "Unknown error" if no matching message is found.
+ */
 METAGRAPH_ATTR_COLD_CONST
 const char *metagraph_result_to_string(metagraph_result_t result) {
     // Linear search through the table (fine for ~50 entries)
@@ -150,6 +158,19 @@ static void metagraph_write_message(metagraph_error_context_t *context,
                                     const char *format, va_list args)
     METAGRAPH_ATTR_PRINTF(2, 0);
 
+/**
+ * Format an error message into the per-thread error context's message buffer.
+ *
+ * If `format` is NULL, the context message is set to an empty string.
+ * On formatting failure, the message is replaced with "<format error>".
+ * If the formatted output would overflow the buffer, the end of the buffer is
+ * replaced with "..." when there is room to indicate truncation.
+ *
+ * @param context Pointer to the thread-local error context whose `message`
+ *                buffer will be written.
+ * @param format  printf-style format string (may be NULL).
+ * @param args    `va_list` of arguments for `format`.
+ */
 static void metagraph_write_message(metagraph_error_context_t *context,
                                     const char *format, va_list args) {
     if (!format) {
@@ -181,6 +202,21 @@ static metagraph_result_t metagraph_set_error_context_v(
     const char *format,   // NOLINT(bugprone-easily-swappable-parameters)
     va_list args) METAGRAPH_ATTR_PRINTF(5, 0);
 
+/**
+ * Populate the current thread's error context with the given error code, source location, and formatted message.
+ *
+ * Sets the thread-local error context fields to reflect the provided `code`, `file`, `line`, and `function`, and formats
+ * a human-readable message into the context using `format` and `args`. If the per-thread context is not available,
+ * no context is modified.
+ *
+ * @param code Error code to store in the thread-local context.
+ * @param file Source file name associated with the error location.
+ * @param line Source line number associated with the error location.
+ * @param function Name of the function associated with the error location.
+ * @param format printf-style format string used to compose the error message; may be NULL to produce an empty message.
+ * @param args  Variadic argument list corresponding to `format`.
+ * @returns The same `code` value that was passed in.
+ */
 static metagraph_result_t metagraph_set_error_context_v(
     metagraph_result_t code, const char *file, int line,
     const char *function, // NOLINT(bugprone-easily-swappable-parameters)
@@ -204,6 +240,20 @@ static metagraph_result_t metagraph_set_error_context_v(
     return code;
 }
 
+/**
+ * Set the current thread's error context with source location and a formatted message.
+ *
+ * Populates the per-thread error context's code, source file, line, function name,
+ * and message formatted using `format` and the following variadic arguments.
+ * If the per-thread context cannot be allocated, the call has no effect on thread state.
+ *
+ * @param code Error code to store in the thread-local context.
+ * @param file Source file name where the error occurred.
+ * @param line Source line number where the error occurred.
+ * @param function Source function name where the error occurred.
+ * @param format Printf-style format string for the error message, followed by matching arguments.
+ * @returns The provided `code`.
+ */
 METAGRAPH_ATTR_COLD
 metagraph_result_t metagraph_set_error_context(
     metagraph_result_t code, const char *file, int line,
@@ -217,6 +267,16 @@ metagraph_result_t metagraph_set_error_context(
     return result;
 }
 
+/**
+ * Retrieve the current thread's error context into the supplied output object.
+ *
+ * If the per-thread context is unavailable (allocation failed) or no error has
+ * been set, the output is zeroed and its `code` field is set to METAGRAPH_SUCCESS.
+ *
+ * @param context Destination object to receive the error context; must not be NULL.
+ * @returns METAGRAPH_SUCCESS when the context was retrieved or cleared successfully,
+ *          METAGRAPH_ERROR_NULL_POINTER if `context` is NULL.
+ */
 metagraph_result_t
 metagraph_get_error_context(metagraph_error_context_t *context) {
     if (!context) {

@@ -13,6 +13,23 @@
 #include "metagraph/rmg.h"
 #include "metagraph/rule.h"
 
+/**
+ * Collects matches from all rules for a given RMG into a single aggregate match set.
+ *
+ * Populates `aggregate` with the concatenation of matches found by applying each
+ * rule in `rules[0..rule_count-1]` to `rmg`. `aggregate->count` is set to 0
+ * on entry and updated to the total number of matches on success.
+ *
+ * @param rmg RMG to match against.
+ * @param rules Array of rules to apply.
+ * @param rule_count Number of rules in `rules`.
+ * @param arena Arena used for temporary allocations during matching.
+ * @param aggregate Destination match set that will contain all collected matches.
+ *
+ * @returns METAGRAPH_SUCCESS on success; otherwise returns the propagated error
+ * result from matching, or METAGRAPH_ERR(METAGRAPH_ERROR_OUT_OF_MEMORY, ...)
+ * if memory for expanding `aggregate` could not be allocated.
+ */
 static metagraph_result_t
 metagraph_qca_collect_matches(const mg_rmg_t *rmg, const mg_rule_t *rules,
                               uint32_t rule_count, mg_arena_t *arena,
@@ -40,6 +57,18 @@ metagraph_qca_collect_matches(const mg_rmg_t *rmg, const mg_rule_t *rules,
     return METAGRAPH_SUCCESS;
 }
 
+/**
+ * Apply scheduled matches to modify the Hilbert node bitset according to QCA kernel rules.
+ *
+ * For each match in `schedule`:
+ * - If `rule_id` is 1 and `L_n >= 1`, toggle `hilbert->node_bits` at `L2G_node[0]` if that node index is valid.
+ * - If `rule_id` is 2 and `L_n >= 2`, treat `L2G_node[0]` as control and `L2G_node[1]` as target; if both indices are valid and the control bit is set, toggle the target bit.
+ *
+ * This function mutates `hilbert->node_bits` in-place. Invalid node indices are ignored.
+ *
+ * @param hilbert Pointer to the Hilbert structure whose node bits will be modified.
+ * @param schedule Match schedule to apply.
+ */
 static void metagraph_qca_apply_matches(mg_hilbert_t *hilbert,
                                         const mg_match_set_t *schedule) {
     for (uint32_t index = 0; index < schedule->count; ++index) {
@@ -60,6 +89,13 @@ static void metagraph_qca_apply_matches(mg_hilbert_t *hilbert,
     }
 }
 
+/**
+ * Apply QCA kernel effects described by a match schedule to the given Hilbert state.
+ *
+ * @param hilbert Hilbert state whose node bits will be modified according to the schedule.
+ * @param schedule Set of matches describing kernel actions to apply.
+ * @return METAGRAPH_SUCCESS on success.
+ */
 metagraph_result_t mg_qca_apply_kernels(mg_hilbert_t *hilbert,
                                         const mg_rmg_t *rmg,
                                         const mg_rule_t *rules,
@@ -72,6 +108,20 @@ metagraph_result_t mg_qca_apply_kernels(mg_hilbert_t *hilbert,
     return METAGRAPH_SUCCESS;
 }
 
+/**
+ * Process one QCA tick for an RMG: collect matches across rules, schedule maximal matches,
+ * apply kernel effects to the Hilbert, commit rewrites, and optionally flip the epoch.
+ *
+ * @param rmg RMG to process.
+ * @param hilbert Hilbert structure modified by kernel application.
+ * @param rules Array of rules to match against the RMG.
+ * @param rule_count Number of rules in `rules`.
+ * @param arena Optional memory arena used for matching; may be NULL.
+ * @param epoch Optional epoch to flip if non-NULL after a successful commit.
+ * @param metrics Output metrics; updated with match counts and reset timing fields.
+ * @returns METAGRAPH_SUCCESS on success, or an error metagraph_result_t if matching,
+ * kernel application, scheduling, allocation, or commit fails (for example, out-of-memory).
+ */
 metagraph_result_t mg_qca_tick_rmg(mg_rmg_t *rmg, mg_hilbert_t *hilbert,
                                    const mg_rule_t *rules, uint32_t rule_count,
                                    mg_arena_t *arena, mg_epoch_t *epoch,
