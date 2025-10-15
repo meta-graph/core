@@ -97,7 +97,7 @@ _Static_assert(sizeof(METAGRAPH_ERROR_STRINGS) /
                "Add new error codes to error_strings table when extending "
                "metagraph_result_t");
 
-#if defined(__has_attribute)
+#ifdef __has_attribute
 #if __has_attribute(cold) && __has_attribute(const)
 #define METAGRAPH_ATTR_COLD_CONST __attribute__((cold, const))
 #endif
@@ -127,7 +127,7 @@ const char *metagraph_result_to_string(metagraph_result_t result) {
     return "Unknown error";
 }
 
-#if defined(__has_attribute)
+#ifdef __has_attribute
 #if __has_attribute(cold)
 #define METAGRAPH_ATTR_COLD __attribute__((cold))
 #endif
@@ -136,39 +136,72 @@ const char *metagraph_result_to_string(metagraph_result_t result) {
 #define METAGRAPH_ATTR_COLD
 #endif
 
-/* GCC/Clang printf-format checking for (buff, cap, fmt, va_list) */
-#if defined(__has_attribute)
+#ifdef __has_attribute
 #if __has_attribute(format)
-#define METAGRAPH_ATTR_PRINTF_VA(fmt) __attribute__((format(printf, fmt, 0)))
+#define METAGRAPH_ATTR_PRINTF(fmt_index, arg_index)                            \
+    __attribute__((format(printf, fmt_index, arg_index)))
 #endif
 #endif
-#ifndef METAGRAPH_ATTR_PRINTF_VA
-#define METAGRAPH_ATTR_PRINTF_VA(fmt)
+#ifndef METAGRAPH_ATTR_PRINTF
+#define METAGRAPH_ATTR_PRINTF(fmt_index, arg_index)
 #endif
 
-// Helper to format error message with truncation handling
-METAGRAPH_ATTR_PRINTF_VA(3)
-static void metagraph_format_error_message(char *buffer, size_t cap,
-                                           const char *format, va_list args) {
-    int result = vsnprintf(buffer, cap, format, args);
+static void metagraph_write_message(metagraph_error_context_t *context,
+                                    const char *format, va_list args)
+    METAGRAPH_ATTR_PRINTF(2, 0);
 
-    // Handle vsnprintf errors and truncation
+static void metagraph_write_message(metagraph_error_context_t *context,
+                                    const char *format, va_list args) {
+    if (!format) {
+        context->message[0] = '\0';
+        return;
+    }
+
+    int result =
+        vsnprintf(context->message, sizeof(context->message), format, args);
     if (result < 0) {
-        // Encoding error occurred
         static const char error_msg[] = "<format error>";
         const size_t msg_len = sizeof(error_msg) - 1;
-        memcpy(buffer, error_msg, msg_len);
-        buffer[msg_len] = '\0';
-    } else if (result >= (int)cap) {
-        // Message was truncated, add ellipsis
+        memcpy(context->message, error_msg, msg_len);
+        context->message[msg_len] = '\0';
+    } else if ((size_t)result >= sizeof(context->message)) {
         static const char ellipsis[] = "...";
         const size_t ellipsis_len = sizeof(ellipsis) - 1;
-
-        // Only add ellipsis if there's room
-        if (cap > ellipsis_len + 1) {
-            memcpy(buffer + cap - ellipsis_len - 1, ellipsis, ellipsis_len + 1);
+        if (sizeof(context->message) > ellipsis_len + 1) {
+            memcpy(context->message + sizeof(context->message) - ellipsis_len -
+                       1,
+                   ellipsis, ellipsis_len + 1);
         }
     }
+}
+
+static metagraph_result_t metagraph_set_error_context_v(
+    metagraph_result_t code, const char *file, int line,
+    const char *function, // NOLINT(bugprone-easily-swappable-parameters)
+    const char *format,   // NOLINT(bugprone-easily-swappable-parameters)
+    va_list args) METAGRAPH_ATTR_PRINTF(5, 0);
+
+static metagraph_result_t metagraph_set_error_context_v(
+    metagraph_result_t code, const char *file, int line,
+    const char *function, // NOLINT(bugprone-easily-swappable-parameters)
+    const char *format,   // NOLINT(bugprone-easily-swappable-parameters)
+    va_list args) {
+    metagraph_error_context_t *context = metagraph_get_thread_error_context();
+    if (!context) {
+        return code;
+    }
+
+    context->code = code;
+    context->file = file;
+    context->line = line;
+    context->function = function;
+
+    metagraph_write_message(context, format, args);
+
+    context->detail = NULL;
+    context->detail_size = 0;
+
+    return code;
 }
 
 METAGRAPH_ATTR_COLD
@@ -176,34 +209,12 @@ metagraph_result_t metagraph_set_error_context(
     metagraph_result_t code, const char *file, int line,
     const char *function, // NOLINT(bugprone-easily-swappable-parameters)
     const char *format, ...) {
-    // Rationale: parameters are supplied exclusively by macros
-    // (__FILE__, __LINE__, __func__), so swap risk is nil.
-    metagraph_error_context_t *context = metagraph_get_thread_error_context();
-    if (!context) {
-        // Can't store context due to allocation failure, but still return the
-        // error
-        return code;
-    }
-
-    // Set basic error information
-    context->code = code;
-    context->file = file;
-    context->line = line;
-    context->function = function;
-
-    // Format the error message
     va_list args;
     va_start(args, format);
-    metagraph_format_error_message(context->message, sizeof(context->message),
-                                   format, args);
+    metagraph_result_t result =
+        metagraph_set_error_context_v(code, file, line, function, format, args);
     va_end(args);
-
-    // Clear any previous detail data
-    // Note: Ownership of detail pointer is caller's responsibility
-    context->detail = NULL;
-    context->detail_size = 0;
-
-    return code;
+    return result;
 }
 
 metagraph_result_t

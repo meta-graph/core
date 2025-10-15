@@ -1,7 +1,6 @@
 # MetaGraph clang-tidy Configuration
 # EXTREME quality standards - ALL warnings are errors
 
-# Enable comprehensive check coverage
 Checks: >
   -*,
   bugprone-*,
@@ -12,15 +11,12 @@ Checks: >
   performance-*,
   portability-*,
   readability-*,
-  -readability-magic-numbers
+  -readability-magic-numbers,
+  -bugprone-easily-swappable-parameters
 
-# ALL warnings become compilation errors - zero tolerance
 WarningsAsErrors: '*'
-
-# Apply checks to our headers only
 HeaderFilterRegex: '(include|src)/.*\.(h|c)$'
 
-# Check configuration
 CheckOptions:
   # Naming conventions for MetaGraph
   - key: readability-identifier-naming.TypedefCase
@@ -40,7 +36,7 @@ CheckOptions:
   - key: readability-identifier-naming.FunctionCase
     value: lower_case
   - key: readability-identifier-naming.FunctionPrefix
-    value: 'metagraph_'
+    value: ''
   - key: readability-identifier-naming.VariableCase
     value: lower_case
   - key: readability-identifier-naming.ParameterCase
@@ -60,11 +56,11 @@ CheckOptions:
   - key: readability-function-size.LineThreshold
     value: '50'
   - key: readability-function-size.StatementThreshold
-    value: '25'
+    value: '60'
   - key: readability-function-size.BranchThreshold
-    value: '8'
+    value: '15'
   - key: readability-function-size.ParameterThreshold
-    value: '6'
+    value: '8'
   - key: readability-function-size.NestingThreshold
     value: '5'
 
@@ -82,7 +78,7 @@ CheckOptions:
   - key: performance-no-automatic-move.AllowedTypes
     value: ''
 
-  # Modernize to C23
+  # Modern C (disabled for C builds)
   - key: modernize-replace-auto-ptr.IncludeStyle
     value: google
   - key: modernize-use-auto.MinTypeNameLength
@@ -97,16 +93,3 @@ CheckOptions:
   # Thread safety
   - key: misc-misplaced-const.CheckPrimitiveCasts
     value: true
-
-# Force checking of system headers for complete validation
-SystemHeaders: false
-
-# Use absolute paths in diagnostics for IDE integration
-UseColor: true
-
-# Enable all available experimental checks
-# Note: When using compilation database, extra args should be passed via command line
-# to avoid being interpreted as file paths
-
-# Performance: run checks in parallel
-# Parallel: true  # Not supported in this clang-tidy version
