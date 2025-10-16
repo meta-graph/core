@@ -19,8 +19,8 @@ typedef struct {
     uint8_t node_count; /**< <= MG_RULE_MAX_NODES */
     mg_type_id_t node_type[MG_RULE_MAX_NODES];
     uint8_t edge_count; /**< <= MG_RULE_MAX_EDGES */
-    uint8_t edge_u[MG_RULE_MAX_EDGES];
-    uint8_t edge_v[MG_RULE_MAX_EDGES];
+    mg_node_id_t edge_u[MG_RULE_MAX_EDGES];
+    mg_node_id_t edge_v[MG_RULE_MAX_EDGES];
 } mg_pattern_t;
 
 typedef enum {

@@ -69,8 +69,8 @@ void mg_rule_make_split_w(mg_rule_t *rule, uint32_t rule_id) {
     memcpy(rule->R.node_type, r_types,
            rule->R.node_count * sizeof(rule->R.node_type[0]));
     rule->R.edge_count = 2;
-    const uint8_t r_edge_u[] = {0U, 2U};
-    const uint8_t r_edge_v[] = {2U, 1U};
+    const mg_node_id_t r_edge_u[] = {0U, 2U};
+    const mg_node_id_t r_edge_v[] = {2U, 1U};
     memcpy(rule->R.edge_u, r_edge_u,
            rule->R.edge_count * sizeof(rule->R.edge_u[0]));
     memcpy(rule->R.edge_v, r_edge_v,
