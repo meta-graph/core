@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include "metagraph/base.h"
+#include "metagraph/rmg.h"
 
 enum { MG_TYPE_Q = 1, MG_TYPE_W = 2 };
 
@@ -21,6 +22,18 @@ typedef enum {
     MG_KERNEL_CNOT = 10,
     MG_KERNEL_ISOM_SPLIT = 20
 } mg_kernel_id_t;
+
+typedef struct {
+    uint16_t min_in;
+    uint16_t max_in;
+    uint16_t min_out;
+    uint16_t max_out;
+} mg_rule_port_cap_t;
+
+typedef struct {
+    mg_edge_ifc_t edge_ifc;
+    uint8_t l_edge_index;
+} mg_rule_edge_iface_t;
 
 typedef struct {
     uint16_t in_count;
@@ -44,6 +57,8 @@ typedef struct {
     mg_iface_stub_t in_iface;
     mg_iface_stub_t out_iface;
     uint16_t L_boundary_mask;
+    mg_rule_port_cap_t L_port_caps[16];
+    mg_rule_edge_iface_t preserved_edge_ifc[24];
     mg_kernel_id_t kernel;
     uint16_t kernel_radius;
     uint32_t flags;

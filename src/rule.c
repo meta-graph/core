@@ -1,11 +1,20 @@
 #include "metagraph/rule.h"
 #include "metagraph/base.h"
 
+#include <limits.h>
 #include <stdint.h>
 #include <string.h>
 
+static void mg_rule_init_port_caps(mg_rule_t *rule) {
+    for (uint32_t i = 0; i < 16U; ++i) {
+        rule->L_port_caps[i].max_in = UINT16_MAX;
+        rule->L_port_caps[i].max_out = UINT16_MAX;
+    }
+}
+
 void mg_rule_make_apply_x(mg_rule_t *rule, uint32_t rule_id) {
     memset(rule, 0, sizeof(*rule));
+    mg_rule_init_port_caps(rule);
     rule->rule_id = rule_id;
     rule->L.node_count = 1;
     rule->L.node_type[0] = MG_TYPE_Q;
@@ -21,6 +30,7 @@ void mg_rule_make_apply_x(mg_rule_t *rule, uint32_t rule_id) {
 
 void mg_rule_make_cnot_qwq(mg_rule_t *rule, uint32_t rule_id) {
     memset(rule, 0, sizeof(*rule));
+    mg_rule_init_port_caps(rule);
     rule->rule_id = rule_id;
     rule->L.node_count = 2;
     rule->L.node_type[0] = MG_TYPE_Q;
@@ -44,6 +54,7 @@ void mg_rule_make_cnot_qwq(mg_rule_t *rule, uint32_t rule_id) {
 
 void mg_rule_make_split_w(mg_rule_t *rule, uint32_t rule_id) {
     memset(rule, 0, sizeof(*rule));
+    mg_rule_init_port_caps(rule);
     rule->rule_id = rule_id;
     rule->L.node_count = 2;
     const mg_type_id_t l_types[] = {MG_TYPE_Q, MG_TYPE_Q};

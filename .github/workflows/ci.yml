@@ -185,9 +185,61 @@ jobs:
         files: ./coverage.profdata
         fail_ci_if_error: true
 
+  clang-tidy-god-tier:
+    name: GNU-GON-CRY-GOD-TIER-SUPERSTRICT™ clang-tidy
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install LLVM toolchain
+      run: |
+        wget https://apt.llvm.org/llvm.sh
+        chmod +x llvm.sh
+        sudo ./llvm.sh ${{ env.LLVM_VERSION }}
+        sudo apt-get update
+        sudo apt-get install -y cmake ninja-build \
+          clang-tidy-${{ env.LLVM_VERSION }} \
+          clang-format-${{ env.LLVM_VERSION }}
+        sudo update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-${{ env.LLVM_VERSION }} 100
+        sudo update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-${{ env.LLVM_VERSION }} 100
+
+    - name: Configure GNU-GON-CRY-GOD-TIER build
+      env:
+        CC: clang-18
+        CXX: clang++-18
+      run: |
+        cmake -B build -G Ninja \
+          -DCMAKE_BUILD_TYPE=Debug \
+          -DMETAGRAPH_DEV=ON \
+          -DMETAGRAPH_SANITIZERS=OFF \
+          -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+
+    - name: Build compile database
+      run: cmake --build build --parallel
+
+    - name: Run GNU-GON-CRY-GOD-TIER-SUPERSTRICT™ clang-tidy
+      run: |
+        set +e
+        set -o pipefail
+        ./scripts/run-clang-tidy.sh --check | tee clang-tidy.log
+        tidy_status=$?
+        set -e
+        warnings=$(grep -c "warning:" clang-tidy.log || true)
+        errors=$(grep -c "error:" clang-tidy.log || true)
+        echo "::notice title=GNU-GON-CRY-GOD-TIER-SUPERSTRICT™ clang-tidy::${warnings} warnings / ${errors} errors"
+        exit "$tidy_status"
+
+    - name: Upload clang-tidy log
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: clang-tidy-god-tier-log
+        path: clang-tidy.log
+        retention-days: 7
+
   all-checks-pass:
     name: All Checks Pass
-    needs: [quality-matrix, format-check, sanitizers, coverage]
+    needs: [quality-matrix, format-check, sanitizers, coverage, clang-tidy-god-tier]
     runs-on: ubuntu-latest
     steps:
     - run: echo "All checks passed!"
