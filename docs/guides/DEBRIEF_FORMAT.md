@@ -31,6 +31,5 @@ Guidelines:
 - Append only; never rewrite or reflow existing entries.
 - Fill in today’s date/time automatically in UTC-8 (PST) unless otherwise
   specified by the maintainer.
-- Keep `time_percent` values roughly proportional and totalling 100 across
+- Keep `time_percent` values roughly proportional and totaling 100 across
   topics.
-

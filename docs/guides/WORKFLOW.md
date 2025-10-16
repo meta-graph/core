@@ -5,7 +5,7 @@ It was previously embedded in `AGENTS.md` and is now tracked here so pull
 requests can reference it directly.
 
 > [!INFO]
-> ### The Cycle of Work
+> ## The Cycle of Work
 > > By ChatGPT PRIME™ • 2025-10-15 @ 01:53
 >
 > ## **Preface**: Yo, What Even ***Is*** Code?
@@ -54,4 +54,3 @@ implementation instead of behaviour.
 - Red bars mean alignment forming—embrace them.
 - Stay in the tidy → integrate → tidy loop: every change starts and ends with
   `clang-tidy -p build`.
-

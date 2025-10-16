@@ -141,15 +141,6 @@ const char *metagraph_result_to_string(metagraph_result_t result) {
 }
 
 #ifdef __has_attribute
-#if __has_attribute(cold)
-#define METAGRAPH_ATTR_COLD __attribute__((cold))
-#endif
-#endif
-#ifndef METAGRAPH_ATTR_COLD
-#define METAGRAPH_ATTR_COLD
-#endif
-
-#ifdef __has_attribute
 #if __has_attribute(format)
 #define METAGRAPH_ATTR_PRINTF(fmt_index, arg_index)                            \
     __attribute__((format(printf, fmt_index, arg_index)))

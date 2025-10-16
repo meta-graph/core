@@ -74,6 +74,7 @@ typedef struct {
 
 /**
  * Fully materialised rule used by the matcher and QCA runtime.
+ * Arrays follow MG_RULE_MAX_* limits and are POD for easy copying.
  */
 typedef struct {
     uint32_t rule_id;

@@ -1,6 +1,7 @@
 #include "metagraph/rmg.h"
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
 bool mg_rmg_hydrate_node_att(const mg_rmg_t *rmg, uint32_t node_index,

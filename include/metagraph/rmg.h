@@ -40,6 +40,10 @@ typedef struct {
     mg_port_sig_t signature;
 } mg_iface_port_t;
 
+/**
+ * Interface signature referencing a caller-owned array of ports.
+ * The pointed-to array must remain valid for the lifetime of this struct.
+ */
 typedef struct {
     const mg_iface_port_t *ports;
     uint16_t port_count;
@@ -62,6 +66,11 @@ typedef struct {
     mg_attach_ref_t after;
 } mg_att_update_t;
 
+/**
+ * Runtime Metagraph (RMG) view over skeletal graph, attachments, and epochs.
+ * All pointers are borrowed; callers manage allocation and teardown.
+ * The structure is expected to be read-only after initialisation.
+ */
 typedef struct {
     mg_graph_t *skel;
     mg_attach_ref_t *node_att;
@@ -71,9 +80,25 @@ typedef struct {
     mg_attachment_epoch_t *att_epoch;
 } mg_rmg_t;
 
+/**
+ * Hydrate a node attachment.
+ * @param rmg Runtime metagraph context (must not be NULL).
+ * @param node_index Index into the skeletal graph nodes.
+ * @param attachment Output pointer to hydrated attachment (NULL if none).
+ * @param kind Output attachment kind (MG_ATT_NONE if none).
+ * @return true on success, false if arguments are invalid.
+ */
 bool mg_rmg_hydrate_node_att(const mg_rmg_t *rmg, uint32_t node_index,
                              const void **attachment, mg_att_kind_t *kind);
 
+/**
+ * Hydrate an edge attachment.
+ * @param rmg Runtime metagraph context (must not be NULL).
+ * @param edge_index Index into the skeletal graph edges.
+ * @param attachment Output pointer to hydrated attachment (NULL if none).
+ * @param kind Output attachment kind (MG_ATT_NONE if none).
+ * @return true on success, false if arguments are invalid.
+ */
 bool mg_rmg_hydrate_edge_att(const mg_rmg_t *rmg, uint32_t edge_index,
                              const void **attachment, mg_att_kind_t *kind);
 
