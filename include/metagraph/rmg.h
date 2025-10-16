@@ -60,7 +60,7 @@ typedef struct {
     uint32_t index;
     mg_attach_ref_t before;
     mg_attach_ref_t after;
-} metagraph_att_update_t;
+} mg_att_update_t;
 
 typedef struct {
     mg_graph_t *skel;

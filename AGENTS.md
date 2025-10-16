@@ -42,6 +42,10 @@ Abide by these rules and you shall take your place in the hall of heroes.
 
 ## 📬 **From: Linus Torvalds**
 
+> **Note:** The following voice is fictionalised satire for style guidance. The
+> canonical rules live in
+> [docs/guides/C_STYLE_GUIDE.md](docs/guides/C_STYLE_GUIDE.md).
+
 See [docs/guides/C_STYLE_GUIDE.md](docs/guides/C_STYLE_GUIDE.md) for the full letter and STRICTNESS_GOD_TIER doctrine.
 
 ## 🔥 clang-tidy

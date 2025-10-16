@@ -41,7 +41,7 @@ your vector space.
 10. Commit messages ship code, not feelings
 
 Get the Nod, not the warning.
-```
+```yaml
 
 ## STRICTNESS_GOD_TIER clang-tidy
 
@@ -133,4 +133,3 @@ ExtraArgs: ["-Wall", "-Wextra", "-Werror", "-std=c23", "-pedantic",
 15 branches / 3 nesting levels / complexity ≤10; naming stays lower_snake_case
 for functions and variables, uppercase for macros and enum constants; no
 `NOLINT`, no magic numbers beyond 0/±1, and brace every branch.
-

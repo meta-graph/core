@@ -13,14 +13,26 @@ extern "C" {
 #define MG_RULE_MAX_NODES 16U
 #define MG_RULE_MAX_EDGES 24U
 
+/**
+ * Built-in MetaGraph type identifiers used by helper rules.
+ */
 typedef enum { MG_TYPE_Q = 1, MG_TYPE_W = 2 } mg_builtin_type_id_t;
 
+/**
+ * Compact pattern graph describing the L/K/R legs of a rule.
+ * Node and edge arrays are capped at MG_RULE_MAX_* to keep structures POD.
+ */
 typedef struct {
-    uint8_t node_count; /**< <= MG_RULE_MAX_NODES */
-    mg_type_id_t node_type[MG_RULE_MAX_NODES];
-    uint8_t edge_count; /**< <= MG_RULE_MAX_EDGES */
-    mg_node_id_t edge_u[MG_RULE_MAX_EDGES];
-    mg_node_id_t edge_v[MG_RULE_MAX_EDGES];
+    uint8_t node_count; /**< Number of nodes in the pattern (<=
+                           MG_RULE_MAX_NODES). */
+    mg_type_id_t
+        node_type[MG_RULE_MAX_NODES]; /**< Node types indexed by node ID. */
+    uint8_t edge_count;               /**< Number of edges in the pattern (<=
+                                         MG_RULE_MAX_EDGES). */
+    mg_node_id_t
+        edge_u[MG_RULE_MAX_EDGES]; /**< Edge source endpoints (node indices). */
+    mg_node_id_t edge_v[MG_RULE_MAX_EDGES]; /**< Edge destination endpoints
+                                               (node indices). */
 } mg_pattern_t;
 
 typedef enum {
@@ -29,6 +41,9 @@ typedef enum {
     MG_KERNEL_ISOM_SPLIT = 20
 } mg_kernel_id_t;
 
+/**
+ * Node port capacity constraints enforced during matching.
+ */
 typedef struct {
     uint16_t min_in;
     uint16_t max_in;
@@ -36,11 +51,18 @@ typedef struct {
     uint16_t max_out;
 } mg_rule_port_cap_t;
 
+/**
+ * Preserved edge interface data for edges that remain during rewrites.
+ */
 typedef struct {
     mg_edge_ifc_t edge_ifc;
     uint8_t l_edge_index;
 } mg_rule_edge_iface_t;
 
+/**
+ * Interface stub describing preserved ports for a rule.
+ * Arrays are fixed-size to avoid heap management in headers.
+ */
 typedef struct {
     uint16_t in_count;
     uint16_t out_count;
@@ -50,6 +72,9 @@ typedef struct {
     uint8_t out_nodes[MG_RULE_MAX_NODES];
 } mg_iface_stub_t;
 
+/**
+ * Fully materialised rule used by the matcher and QCA runtime.
+ */
 typedef struct {
     uint32_t rule_id;
     mg_pattern_t L;
