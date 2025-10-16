@@ -16,7 +16,7 @@ Bring the current branch back to a zero-warning state under the repo’s `.clang
 
 - [ ] Remove/adjust experimental matcher/QCA code that violates the stricter lint profile.  
 - [ ] Regenerate build files if necessary (`cmake .. -DCMAKE_BUILD_TYPE=Release`).  
-- [ ] Run `cmake --build build` and `clang-tidy -p build`; fix every reported issue.  
+- [ ] Run `cmake --build build` and `clang-tidy -p build`; resolve all reported diagnostics.  
 - [ ] Optionally add a CI step (or local script) that runs the stricter clang-tidy automatically.  
 - [ ] Document the clean baseline status in the tracker issue.
 

@@ -16,7 +16,7 @@ Introduce the data structures required by the XTRA drop (typed interfaces, attac
 
 - [ ] Add port direction enums, `mg_iface_sig_t`, and `mg_edge_ifc_t` to the RMG headers (rename to match MetaGraph naming).  
 - [ ] Extend `mg_rule_t` with node port caps and preserved-edge interface signatures; update rule helper builders/tests.  
-- [ ] Add attachment update structs (`metagraph_att_update_t` or equivalent) and second epoch counter for attachments.  
+- [ ] Add attachment update structs (`metagraph_att_update_t` or equivalent) and a secondary epoch counter for attachments.  
 - [ ] Ensure unit tests cover struct initialization defaults.  
 - [ ] Run tidy → integrate → tidy: `clang-tidy -p build` before and after changes.
 

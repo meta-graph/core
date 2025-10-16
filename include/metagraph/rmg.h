@@ -1,9 +1,15 @@
 #ifndef METAGRAPH_RMG_H
 #define METAGRAPH_RMG_H
 
+#include <stdbool.h>
+
 #include "metagraph/base.h"
 #include "metagraph/epoch.h"
 #include "metagraph/graph.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef enum {
     MG_ATT_NONE = 0,
@@ -69,6 +75,10 @@ bool mg_rmg_hydrate_node_att(const mg_rmg_t *rmg, uint32_t node_index,
                              const void **attachment, mg_att_kind_t *kind);
 
 bool mg_rmg_hydrate_edge_att(const mg_rmg_t *rmg, uint32_t edge_index,
-                             const void **attachment);
+                             const void **attachment, mg_att_kind_t *kind);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* METAGRAPH_RMG_H */

@@ -98,12 +98,25 @@ _Static_assert(sizeof(METAGRAPH_ERROR_STRINGS) /
                "metagraph_result_t");
 
 #ifdef __has_attribute
-#if __has_attribute(cold) && __has_attribute(const)
-#define METAGRAPH_ATTR_COLD_CONST __attribute__((cold, const))
+#if __has_attribute(cold)
+#define METAGRAPH_ATTR_COLD __attribute__((cold))
 #endif
 #endif
+#ifndef METAGRAPH_ATTR_COLD
+#define METAGRAPH_ATTR_COLD
+#endif
+
+#ifdef __has_attribute
+#if __has_attribute(const)
+#define METAGRAPH_ATTR_CONST __attribute__((const))
+#endif
+#endif
+#ifndef METAGRAPH_ATTR_CONST
+#define METAGRAPH_ATTR_CONST
+#endif
+
 #ifndef METAGRAPH_ATTR_COLD_CONST
-#define METAGRAPH_ATTR_COLD_CONST
+#define METAGRAPH_ATTR_COLD_CONST METAGRAPH_ATTR_COLD METAGRAPH_ATTR_CONST
 #endif
 
 METAGRAPH_ATTR_COLD_CONST
@@ -152,6 +165,9 @@ static void metagraph_write_message(metagraph_error_context_t *context,
 
 static void metagraph_write_message(metagraph_error_context_t *context,
                                     const char *format, va_list args) {
+    if (!context) {
+        return;
+    }
     if (!format) {
         context->message[0] = '\0';
         return;
@@ -205,6 +221,7 @@ static metagraph_result_t metagraph_set_error_context_v(
 }
 
 METAGRAPH_ATTR_COLD
+METAGRAPH_ATTR_PRINTF(5, 6)
 metagraph_result_t metagraph_set_error_context(
     metagraph_result_t code, const char *file, int line,
     const char *function, // NOLINT(bugprone-easily-swappable-parameters)

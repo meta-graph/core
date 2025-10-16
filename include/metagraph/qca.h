@@ -6,6 +6,10 @@
 #include "metagraph/hilbert.h"
 #include "metagraph/rmg.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct {
     uint32_t matches_found;
     uint32_t matches_kept;
@@ -25,5 +29,9 @@ metagraph_result_t mg_qca_tick_rmg(mg_rmg_t *rmg, mg_hilbert_t *hilbert,
                                    const mg_rule_t *rules, uint32_t rule_count,
                                    mg_arena_t *arena, mg_epoch_t *epoch,
                                    mg_tick_metrics_t *metrics);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* METAGRAPH_QCA_H */

@@ -10,7 +10,7 @@ This document tracks how we will merge the `rmg-c-rmg-skeleton-xtra` drop into `
 ## Guiding Constraints
 
 1. **Lint first, lint last** – every stage runs `clang-tidy -p build` under the repo’s root `.clang-tidy`. No `NOLINT` exceptions permitted.
-2. **Keep functions lean** – target ≤ 50 lines and ≤ 25 statements per helper before landing patches (STR_GOD_TIER soft cap is 80 lines, but we will stay well under to avoid churn).
+2. **Keep functions lean** – target ≤ 50 lines and ≤ 25 statements per helper before landing patches (clang-tidy enforces LineThreshold=50; staying well under avoids churn).
 3. **Epoch discipline** – attachment epoch flips immediately after attachment journal publish; skeleton epoch flips only after CSR publish.
 4. **Journal → verify → publish** – every pushout goes through diff capture, invariant check (debug mode), then epoch flip.
 
