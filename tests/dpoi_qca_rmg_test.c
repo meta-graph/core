@@ -126,6 +126,7 @@ static void test_dpoi_apply_x(void) {
     metagraph_result_t res = mg_dpoi_match_rmg(&rmg, &rule, NULL, &matches);
     assert(!metagraph_result_is_error(res));
     assert(matches.count == 3);
+    (void)res;
 
     mg_match_set_free(&matches);
     mg_rmg_buffers_free(&buffers);
@@ -162,6 +163,7 @@ static void test_qca_tick_apply_x(void) {
     assert(metrics.matches_found == 3);
     assert(metrics.matches_kept == 3);
     assert(metrics.conflicts_dropped == 0);
+    (void)res;
 
     mg_hilbert_free(&hilbert);
     mg_rmg_buffers_free(&buffers);
