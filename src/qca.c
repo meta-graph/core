@@ -1,8 +1,8 @@
 #include "metagraph/qca.h"
 
 #include <limits.h>
+#include <stddef.h>
 #include <stdint.h>
-#include <string.h>
 
 #include "metagraph/arena.h"
 #include "metagraph/base.h"
@@ -52,8 +52,12 @@ metagraph_qca_collect_matches(const mg_rmg_t *rmg, const mg_rule_t *rules,
             return METAGRAPH_ERR(METAGRAPH_ERROR_OUT_OF_MEMORY,
                                  "unable to append matches");
         }
-        memcpy(&aggregate->data[aggregate->count], per_rule.data,
-               per_rule.count * sizeof(mg_match_t));
+        const size_t bytes_to_copy = per_rule.count * sizeof(mg_match_t);
+        const size_t available_bytes =
+            (aggregate->capacity - aggregate->count) * sizeof(mg_match_t);
+        mg_copy_bytes(&aggregate->data[aggregate->count], available_bytes,
+                      per_rule.data, per_rule.count * sizeof(mg_match_t),
+                      bytes_to_copy);
         aggregate->count += per_rule.count;
         mg_match_set_free(&per_rule);
     }

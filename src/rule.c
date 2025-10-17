@@ -3,7 +3,6 @@
 
 #include <limits.h>
 #include <stdint.h>
-#include <string.h>
 
 static void mg_rule_init_port_caps(mg_rule_t *rule) {
     for (uint32_t i = 0; i < MG_RULE_MAX_NODES; ++i) {
@@ -58,23 +57,25 @@ void mg_rule_make_split_w(mg_rule_t *rule, uint32_t rule_id) {
     rule->rule_id = rule_id;
     rule->L.node_count = 2;
     const mg_type_id_t l_types[] = {MG_TYPE_Q, MG_TYPE_Q};
-    memcpy(rule->L.node_type, l_types,
-           rule->L.node_count * sizeof(rule->L.node_type[0]));
+    for (uint32_t i = 0; i < rule->L.node_count; ++i) {
+        rule->L.node_type[i] = l_types[i];
+    }
     rule->L.edge_count = 1;
     rule->L.edge_u[0] = 0;
     rule->L.edge_v[0] = 1;
 
     rule->R.node_count = 3;
     const mg_type_id_t r_types[] = {MG_TYPE_Q, MG_TYPE_Q, MG_TYPE_Q};
-    memcpy(rule->R.node_type, r_types,
-           rule->R.node_count * sizeof(rule->R.node_type[0]));
+    for (uint32_t i = 0; i < rule->R.node_count; ++i) {
+        rule->R.node_type[i] = r_types[i];
+    }
     rule->R.edge_count = 2;
     const mg_node_id_t r_edge_u[] = {0U, 2U};
     const mg_node_id_t r_edge_v[] = {2U, 1U};
-    memcpy(rule->R.edge_u, r_edge_u,
-           rule->R.edge_count * sizeof(rule->R.edge_u[0]));
-    memcpy(rule->R.edge_v, r_edge_v,
-           rule->R.edge_count * sizeof(rule->R.edge_v[0]));
+    for (uint32_t i = 0; i < rule->R.edge_count; ++i) {
+        rule->R.edge_u[i] = r_edge_u[i];
+        rule->R.edge_v[i] = r_edge_v[i];
+    }
 
     rule->K_node_mask = 0x3U;
     rule->K_edge_mask = 0;

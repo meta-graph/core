@@ -2,8 +2,8 @@
 
 #include <stdint.h>
 #include <stdlib.h>
-#include <string.h>
 
+#include "metagraph/base.h"
 #include "metagraph/result.h"
 
 metagraph_result_t mg_hilbert_init(mg_hilbert_t *hilbert, size_t count) {
@@ -46,7 +46,11 @@ metagraph_result_t mg_hilbert_resize(mg_hilbert_t *hilbert, size_t new_count) {
     size_t copy =
         (hilbert->node_count < new_count) ? hilbert->node_count : new_count;
     if (hilbert->node_bits && copy > 0) {
-        memcpy(next, hilbert->node_bits, copy);
+        const size_t dst_bytes = new_count * sizeof(uint8_t);
+        const size_t src_bytes = hilbert->node_count * sizeof(uint8_t);
+        const size_t copy_bytes = copy * sizeof(uint8_t);
+        mg_copy_bytes(next, dst_bytes, hilbert->node_bits, src_bytes,
+                      copy_bytes);
     }
     free(hilbert->node_bits);
     hilbert->node_bits = next;

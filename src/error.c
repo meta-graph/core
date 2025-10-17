@@ -11,9 +11,9 @@
 #include "metagraph/base.h"
 #include "metagraph/result.h"
 #include <stdarg.h>
-#include <stdio.h>
+#include <stdbool.h>
+#include <stdint.h>
 #include <stdlib.h>
-#include <string.h>
 
 // C23 thread-local storage for error context
 // Note: This memory is cached per-thread and not freed until thread exit
@@ -154,33 +154,242 @@ static void metagraph_write_message(metagraph_error_context_t *context,
                                     const char *format, va_list args)
     METAGRAPH_ATTR_PRINTF(2, 0);
 
+typedef struct {
+    char *buffer;
+    size_t capacity;
+    size_t position;
+    bool truncated;
+} metagraph_message_builder_t;
+
+static void metagraph_builder_init(metagraph_message_builder_t *builder,
+                                   char *buffer, size_t capacity) {
+    builder->buffer = buffer;
+    builder->capacity = capacity;
+    builder->position = 0U;
+    builder->truncated = false;
+    mg_zero_buffer(buffer, capacity);
+}
+
+static void metagraph_builder_append_char(metagraph_message_builder_t *builder,
+                                          char character) {
+    if (builder->truncated) {
+        return;
+    }
+    if (builder->capacity == 0U) {
+        builder->truncated = true;
+        return;
+    }
+    if (builder->position + 1U >= builder->capacity) {
+        builder->buffer[builder->capacity - 1U] = '\0';
+        builder->truncated = true;
+        return;
+    }
+    builder->buffer[builder->position++] = character;
+    builder->buffer[builder->position] = '\0';
+}
+
+static void
+metagraph_builder_append_string(metagraph_message_builder_t *builder,
+                                const char *text) {
+    const char *source = text ? text : "(null)";
+    while (*source != '\0' && !builder->truncated) {
+        metagraph_builder_append_char(builder, *source);
+        ++source;
+    }
+}
+
+static void
+metagraph_builder_append_unsigned(metagraph_message_builder_t *builder,
+                                  unsigned long long value, unsigned base,
+                                  bool uppercase) {
+    if (base < 2U) {
+        base = 10U;
+    }
+    char digits[32];
+    const char *alphabet = "0123456789abcdef";
+    if (uppercase) {
+        alphabet = "0123456789ABCDEF";
+    }
+    size_t length = 0U;
+    do {
+        digits[length++] = alphabet[value % base];
+        value /= base;
+    } while (value != 0U && length < sizeof(digits));
+
+    while (length > 0U && !builder->truncated) {
+        metagraph_builder_append_char(builder, digits[--length]);
+    }
+}
+
+static void
+metagraph_builder_append_signed(metagraph_message_builder_t *builder,
+                                long long value) {
+    unsigned long long magnitude;
+    if (value < 0) {
+        metagraph_builder_append_char(builder, '-');
+        magnitude = (unsigned long long)(-(value + 1)) + 1U;
+    } else {
+        magnitude = (unsigned long long)value;
+    }
+    metagraph_builder_append_unsigned(builder, magnitude, 10U, false);
+}
+
+static void
+metagraph_builder_append_pointer(metagraph_message_builder_t *builder,
+                                 const void *ptr) {
+    metagraph_builder_append_string(builder, "0x");
+    if (builder->truncated) {
+        return;
+    }
+    uintptr_t value = (uintptr_t)ptr;
+    metagraph_builder_append_unsigned(builder, value, 16U, false);
+}
+
+static void
+metagraph_builder_append_ellipsis(metagraph_message_builder_t *builder) {
+    if (!builder->truncated || builder->capacity <= 4U) {
+        return;
+    }
+    builder->buffer[builder->capacity - 4U] = '.';
+    builder->buffer[builder->capacity - 3U] = '.';
+    builder->buffer[builder->capacity - 2U] = '.';
+    builder->buffer[builder->capacity - 1U] = '\0';
+}
+
+typedef enum {
+    METAGRAPH_LENGTH_NONE,
+    METAGRAPH_LENGTH_LONG,
+    METAGRAPH_LENGTH_LONG_LONG
+} metagraph_length_modifier_t;
+
+static metagraph_length_modifier_t
+metagraph_parse_length(const char **cursor_ptr) {
+    const char *cursor = *cursor_ptr;
+    metagraph_length_modifier_t length = METAGRAPH_LENGTH_NONE;
+    if (*cursor == 'l') {
+        ++cursor;
+        if (*cursor == 'l') {
+            length = METAGRAPH_LENGTH_LONG_LONG;
+            ++cursor;
+        } else {
+            length = METAGRAPH_LENGTH_LONG;
+        }
+    }
+    *cursor_ptr = cursor;
+    return length;
+}
+
+static unsigned long long
+metagraph_extract_unsigned(va_list *args, metagraph_length_modifier_t length) {
+    switch (length) {
+    case METAGRAPH_LENGTH_LONG_LONG:
+        return va_arg(*args, unsigned long long);
+    case METAGRAPH_LENGTH_LONG:
+        return va_arg(*args, unsigned long);
+    case METAGRAPH_LENGTH_NONE:
+    default:
+        return (unsigned long long)va_arg(*args, unsigned int);
+    }
+}
+
+static long long metagraph_extract_signed(va_list *args,
+                                          metagraph_length_modifier_t length) {
+    switch (length) {
+    case METAGRAPH_LENGTH_LONG_LONG:
+        return va_arg(*args, long long);
+    case METAGRAPH_LENGTH_LONG:
+        return va_arg(*args, long);
+    case METAGRAPH_LENGTH_NONE:
+    default:
+        return (long long)va_arg(*args, int);
+    }
+}
+
+static bool
+metagraph_builder_append_format(metagraph_message_builder_t *builder,
+                                const char **cursor_ptr, va_list *args) {
+    const char *cursor = *cursor_ptr;
+    metagraph_length_modifier_t length = metagraph_parse_length(&cursor);
+    const char specifier = *cursor;
+    if (specifier == '\0') {
+        *cursor_ptr = cursor;
+        return true;
+    }
+    ++cursor;
+
+    bool error = false;
+    switch (specifier) {
+    case 's':
+        metagraph_builder_append_string(builder, va_arg(*args, const char *));
+        break;
+    case 'd':
+    case 'i':
+        metagraph_builder_append_signed(builder,
+                                        metagraph_extract_signed(args, length));
+        break;
+    case 'u':
+        metagraph_builder_append_unsigned(
+            builder, metagraph_extract_unsigned(args, length), 10U, false);
+        break;
+    case 'x':
+    case 'X':
+        metagraph_builder_append_unsigned(
+            builder, metagraph_extract_unsigned(args, length), 16U,
+            specifier == 'X');
+        break;
+    case 'p':
+        metagraph_builder_append_pointer(builder, va_arg(*args, const void *));
+        break;
+    default:
+        error = true;
+        break;
+    }
+
+    *cursor_ptr = cursor;
+    return error;
+}
+
 static void metagraph_write_message(metagraph_error_context_t *context,
                                     const char *format, va_list args) {
     if (!context) {
         return;
     }
+    metagraph_message_builder_t builder;
+    metagraph_builder_init(&builder, context->message,
+                           sizeof(context->message));
+
     if (!format) {
-        context->message[0] = '\0';
         return;
     }
 
-    int result =
-        vsnprintf(context->message, sizeof(context->message), format, args);
-    if (result < 0) {
-        static const char error_msg[] = "<format error>";
-        const size_t msg_len = sizeof(error_msg) - 1;
-        memcpy(context->message, error_msg, msg_len);
-        context->message[msg_len] = '\0';
-    } else if ((size_t)result >= sizeof(context->message)) {
-        static const char ellipsis[] = "...";
-        const size_t ellipsis_len = sizeof(ellipsis) - 1;
-        if (sizeof(context->message) > ellipsis_len + 1) {
-            // Place ellipsis at the end and preserve a null terminator.
-            memcpy(context->message + sizeof(context->message) - ellipsis_len -
-                       1,
-                   ellipsis, ellipsis_len + 1);
+    va_list local_args;
+    va_copy(local_args, args);
+
+    const char *cursor = format;
+    while (*cursor != '\0' && !builder.truncated) {
+        if (*cursor != '%') {
+            metagraph_builder_append_char(&builder, *cursor);
+            ++cursor;
+            continue;
+        }
+        ++cursor;
+        if (*cursor == '%') {
+            metagraph_builder_append_char(&builder, '%');
+            ++cursor;
+            continue;
+        }
+
+        if (metagraph_builder_append_format(&builder, &cursor, &local_args)) {
+            static const char error_msg[] = "<format error>";
+            metagraph_builder_init(&builder, context->message,
+                                   sizeof(context->message));
+            metagraph_builder_append_string(&builder, error_msg);
+            break;
         }
     }
+
+    va_end(local_args);
+    metagraph_builder_append_ellipsis(&builder);
 }
 
 static metagraph_result_t metagraph_set_error_context_v(
