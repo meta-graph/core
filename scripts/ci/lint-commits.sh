@@ -18,6 +18,6 @@ fi
 
 merge_base="$(git merge-base "$base_ref" "$HEAD_SHA")"
 
-npx --yes -p @commitlint/cli@18 -p @commitlint/config-conventional \
+npx --yes --package @commitlint/cli@18 --package @commitlint/config-conventional \
   commitlint --extends @commitlint/config-conventional \
   --from "$merge_base" --to "$HEAD_SHA"
