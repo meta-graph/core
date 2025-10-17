@@ -332,11 +332,12 @@ metagraph_builder_append_format(metagraph_message_builder_t *builder,
             builder, metagraph_extract_unsigned(args, length), 10U, false);
         break;
     case 'x':
-    case 'X':
+    case 'X': {
+        const bool uppercase = (specifier == 'X');
         metagraph_builder_append_unsigned(
-            builder, metagraph_extract_unsigned(args, length), 16U,
-            specifier == 'X');
+            builder, metagraph_extract_unsigned(args, length), 16U, uppercase);
         break;
+    }
     case 'p':
         metagraph_builder_append_pointer(builder, va_arg(*args, const void *));
         break;
