@@ -167,8 +167,10 @@ jobs:
       run: |
         cmake -B build -G Ninja \
           -DCMAKE_BUILD_TYPE=Debug \
-          -DCMAKE_C_FLAGS="--coverage -fprofile-instr-generate -fcoverage-mapping" \
-          -DCMAKE_EXE_LINKER_FLAGS="--coverage"
+          -DCMAKE_C_FLAGS="-fprofile-instr-generate -fcoverage-mapping" \
+          -DCMAKE_CXX_FLAGS="-fprofile-instr-generate -fcoverage-mapping" \
+          -DCMAKE_EXE_LINKER_FLAGS="-fprofile-instr-generate -fcoverage-mapping" \
+          -DCMAKE_SHARED_LINKER_FLAGS="-fprofile-instr-generate -fcoverage-mapping"
 
     - name: Build
       run: cmake --build build
@@ -178,11 +180,13 @@ jobs:
         LLVM_PROFILE_FILE="coverage-%p.profraw" ctest --test-dir build --output-on-failure
         llvm-profdata-18 merge -sparse coverage-*.profraw -o coverage.profdata
         llvm-cov-18 report ./build/bin/* -instr-profile=coverage.profdata
+        # Export LCOV for Codecov
+        llvm-cov-18 export ./build/bin/* -instr-profile=coverage.profdata -format=lcov > coverage.lcov
 
     - name: Upload coverage reports
       uses: codecov/codecov-action@v3
       with:
-        files: ./coverage.profdata
+        files: ./coverage.lcov
         fail_ci_if_error: true
 
   clang-tidy-god-tier:
@@ -228,6 +232,12 @@ jobs:
         warnings=$(grep -c "warning:" clang-tidy.log || true)
         errors=$(grep -c "error:" clang-tidy.log || true)
         echo "::notice title=GNU-GON-CRY-GOD-TIER-SUPERSTRICT™ clang-tidy::${warnings} warnings / ${errors} errors"
+        {
+          echo "## clang-tidy summary"
+          echo ""
+          echo "- Warnings: ${warnings}"
+          echo "- Errors: ${errors}"
+        } >> "$GITHUB_STEP_SUMMARY" || true
         exit "$tidy_status"
 
     - name: Upload clang-tidy log
