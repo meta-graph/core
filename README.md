@@ -2,13 +2,14 @@
 
 > _Graphs. All. The. Way. Down._
 
+<img height="400" src="https://github.com/user-attachments/assets/69a481cb-494f-4f69-994b-7c398be7ba73" align="right" />
+
 A high-performance C23 library implementing a recursive metagraph foundation where nodes are graphs, edges are graphs, and graphs contain graphs infinitely.
 
 [![CI](https://github.com/meta-graph/core/workflows/CI/badge.svg)](https://github.com/meta-graph/core/actions)
-[![Security](https://github.com/meta-graph/core/workflows/Security/badge.svg)](https://github.com/meta-graph/core/actions)
 [![SLSA](https://slsa.dev/images/gh-badge-level1.svg)](https://slsa.dev)
 
-## Overview
+### Overview
 
 MetaGraph implements a **recursive metagraph** data structure - not just a hypergraph. In this mathematical foundation:
 
