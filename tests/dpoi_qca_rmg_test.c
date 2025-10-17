@@ -2,8 +2,8 @@
 #include <limits.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include <string.h>
 
+#include "metagraph/base.h"
 #include "metagraph/dpoi.h"
 #include "metagraph/graph.h"
 #include "metagraph/hilbert.h"
@@ -16,7 +16,7 @@
 static void init_rmg(mg_graph_t *graph, mg_rmg_t *rmg,
                      mg_attach_ref_t *node_att, mg_attach_ref_t *edge_att,
                      mg_edge_ifc_t *edge_ifc) {
-    memset(rmg, 0, sizeof *rmg);
+    mg_zero_buffer(rmg, sizeof *rmg);
     rmg->skel = graph;
     rmg->node_att = node_att;
     rmg->edge_att = edge_att;
@@ -79,7 +79,7 @@ static void mg_rmg_buffers_free(mg_rmg_buffers_t *buffers) {
     free(buffers->edge_ifc);
     free(buffers->edge_att);
     free(buffers->node_att);
-    memset(buffers, 0, sizeof *buffers);
+    mg_zero_buffer(buffers, sizeof *buffers);
 }
 
 static void assert_edge_interfaces_clear(const mg_rmg_t *rmg,

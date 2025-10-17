@@ -13,7 +13,7 @@ static void mg_rule_init_port_caps(mg_rule_t *rule) {
 }
 
 void mg_rule_make_apply_x(mg_rule_t *rule, uint32_t rule_id) {
-    memset(rule, 0, sizeof(*rule));
+    mg_zero_buffer(rule, sizeof(*rule));
     mg_rule_init_port_caps(rule);
     rule->rule_id = rule_id;
     rule->L.node_count = 1;
@@ -29,7 +29,7 @@ void mg_rule_make_apply_x(mg_rule_t *rule, uint32_t rule_id) {
 }
 
 void mg_rule_make_cnot_qwq(mg_rule_t *rule, uint32_t rule_id) {
-    memset(rule, 0, sizeof(*rule));
+    mg_zero_buffer(rule, sizeof(*rule));
     mg_rule_init_port_caps(rule);
     rule->rule_id = rule_id;
     rule->L.node_count = 2;
@@ -53,7 +53,7 @@ void mg_rule_make_cnot_qwq(mg_rule_t *rule, uint32_t rule_id) {
 }
 
 void mg_rule_make_split_w(mg_rule_t *rule, uint32_t rule_id) {
-    memset(rule, 0, sizeof(*rule));
+    mg_zero_buffer(rule, sizeof(*rule));
     mg_rule_init_port_caps(rule);
     rule->rule_id = rule_id;
     rule->L.node_count = 2;

@@ -1,14 +1,14 @@
 #include "metagraph/match.h"
+#include "metagraph/base.h"
 
 #include <stdint.h>
 #include <stdlib.h>
-#include <string.h>
 
 bool mg_match_set_init(mg_match_set_t *set, uint32_t capacity) {
     if (!set) {
         return false;
     }
-    memset(set, 0, sizeof(*set));
+    mg_zero_buffer(set, sizeof(*set));
     if (capacity > 0) {
         set->data = (mg_match_t *)calloc(capacity, sizeof(mg_match_t));
         if (!set->data) {

@@ -1,17 +1,17 @@
 #include "metagraph/graph.h"
+#include "metagraph/base.h"
 #include "metagraph/epoch.h"
 #include "metagraph/rule.h"
 
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include <string.h>
 
 void mg_graph_init_empty(mg_graph_t *graph) {
     if (!graph) {
         return;
     }
-    memset(graph, 0, sizeof(*graph));
+    mg_zero_buffer(graph, sizeof(*graph));
     mg_epoch_init(&graph->epoch);
 }
 
@@ -22,7 +22,7 @@ void mg_graph_free(mg_graph_t *graph) {
     free(graph->nodes);
     free(graph->edges);
     free(graph->nbr_ids);
-    memset(graph, 0, sizeof(*graph));
+    mg_zero_buffer(graph, sizeof(*graph));
 }
 
 mg_graph_snapshot_t mg_graph_snapshot_view(const mg_graph_t *graph) {

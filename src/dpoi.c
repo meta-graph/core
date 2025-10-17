@@ -53,7 +53,7 @@ static metagraph_result_t metagraph_emit_match(const mg_rule_t *rule,
     METAGRAPH_CHECK(metagraph_match_set_grow(set, set->count + 1U));
 
     mg_match_t *match = &set->data[set->count];
-    memset(match, 0, sizeof(*match));
+    mg_zero_buffer(match, sizeof(*match));
     match->rule_id = rule->rule_id;
     match->L_n = count;
 

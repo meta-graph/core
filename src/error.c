@@ -8,6 +8,7 @@
  * thread terminates.
  */
 
+#include "metagraph/base.h"
 #include "metagraph/result.h"
 #include <stdarg.h>
 #include <stdio.h>
@@ -236,14 +237,14 @@ metagraph_get_error_context(metagraph_error_context_t *context) {
     if (!thread_context) {
         // No context available (allocation failed), return success with empty
         // context
-        memset(context, 0, sizeof(*context));
+        mg_zero_buffer(context, sizeof(*context));
         context->code = METAGRAPH_SUCCESS;
         return METAGRAPH_SUCCESS;
     }
 
     // If no error has been set, return success with clear context
     if (thread_context->code == METAGRAPH_SUCCESS) {
-        memset(context, 0, sizeof(*context));
+        mg_zero_buffer(context, sizeof(*context));
         context->code = METAGRAPH_SUCCESS;
         return METAGRAPH_SUCCESS;
     }
@@ -256,7 +257,7 @@ metagraph_get_error_context(metagraph_error_context_t *context) {
 void metagraph_clear_error_context(void) {
     metagraph_error_context_t *context = thread_error_context;
     if (context) {
-        memset(context, 0, sizeof(metagraph_error_context_t));
+        mg_zero_buffer(context, sizeof(metagraph_error_context_t));
         context->code = METAGRAPH_SUCCESS;
         // Note: We intentionally keep the allocated memory for reuse
         // rather than freeing it. This avoids repeated allocations
