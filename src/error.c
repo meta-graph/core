@@ -333,7 +333,7 @@ metagraph_builder_append_format(metagraph_message_builder_t *builder,
         break;
     case 'x':
     case 'X': {
-        const bool uppercase = (specifier == 'X');
+        const bool uppercase = (bool)(specifier == 'X');
         metagraph_builder_append_unsigned(
             builder, metagraph_extract_unsigned(args, length), 16U, uppercase);
         break;
