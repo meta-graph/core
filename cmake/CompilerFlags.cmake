@@ -71,6 +71,17 @@ if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
         -Wvector-operation-performance
     )
 elseif(CMAKE_C_COMPILER_ID MATCHES "Clang")
+    list(REMOVE_ITEM METAGRAPH_WARNING_FLAGS
+        -Wcast-align=strict
+        -Wformat-overflow=2
+        -Wformat-signedness
+        -Wformat-truncation=2
+        -Wimplicit-fallthrough=5
+    )
+    list(APPEND METAGRAPH_WARNING_FLAGS
+        -Wcast-align
+        -Wimplicit-fallthrough
+    )
     list(APPEND METAGRAPH_WARNING_FLAGS
         -Wthread-safety
         -Wthread-safety-beta

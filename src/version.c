@@ -27,9 +27,9 @@ const char *metagraph_bundle_format_uuid(void) {
 
 const char *metagraph_build_info(void) {
     static char build_info[256];
-    snprintf(build_info, sizeof(build_info), "Built on %s from %s (%s)",
-             METAGRAPH_BUILD_TIMESTAMP, METAGRAPH_BUILD_COMMIT_HASH,
-             METAGRAPH_BUILD_BRANCH);
+    (void)snprintf(build_info, sizeof(build_info), "Built on %s from %s (%s)",
+                   METAGRAPH_BUILD_TIMESTAMP, METAGRAPH_BUILD_COMMIT_HASH,
+                   METAGRAPH_BUILD_BRANCH);
     return build_info;
 }
 
