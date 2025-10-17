@@ -28,10 +28,18 @@ bool mg_match_set_reserve(mg_match_set_t *set, uint32_t min_capacity) {
     }
     uint32_t new_capacity = set->capacity ? set->capacity : 8U;
     while (new_capacity < min_capacity) {
+        if (new_capacity > UINT32_MAX / 2U) { // prevent wrap
+            new_capacity = min_capacity;      // fall back to exact fit
+            break;
+        }
         new_capacity *= 2U;
     }
-    mg_match_t *next =
-        (mg_match_t *)realloc(set->data, new_capacity * sizeof(mg_match_t));
+    // size_t byte-count overflow guard
+    if ((size_t)new_capacity > SIZE_MAX / sizeof(mg_match_t)) {
+        return false;
+    }
+    mg_match_t *next = (mg_match_t *)realloc(
+        set->data, (size_t)new_capacity * sizeof(mg_match_t));
     if (!next) {
         return false;
     }
