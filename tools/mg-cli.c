@@ -10,8 +10,12 @@
 static void metagraph_process_input(const char *input) {
     char buffer[64]; // Stack buffer that should trigger protection
     if (input) {
-        strncpy(buffer, input, sizeof(buffer) - 1);
-        buffer[sizeof(buffer) - 1] = '\0';
+        size_t index = 0U;
+        while (input[index] != '\0' && index + 1U < sizeof(buffer)) {
+            buffer[index] = input[index];
+            ++index;
+        }
+        buffer[index] = '\0';
         (void)printf("Processing: %s\n", buffer);
     }
 }
@@ -26,7 +30,19 @@ int main(int argc, char *argv[]) {
 
     // Create another stack buffer
     char local_buffer[128];
-    snprintf(local_buffer, sizeof(local_buffer), "Version: %s", "0.1.0");
+    const char prefix[] = "Version: ";
+    const char version[] = "0.1.0";
+    size_t offset = 0U;
+    while (prefix[offset] != '\0' && offset + 1U < sizeof(local_buffer)) {
+        local_buffer[offset] = prefix[offset];
+        ++offset;
+    }
+    size_t version_index = 0U;
+    while (version[version_index] != '\0' &&
+           offset + 1U < sizeof(local_buffer)) {
+        local_buffer[offset++] = version[version_index++];
+    }
+    local_buffer[offset] = '\0';
     (void)printf("%s\n", local_buffer);
 
     return 0;
