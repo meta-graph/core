@@ -41,14 +41,15 @@ your vector space.
 10. Commit messages ship code, not feelings
 
 Get the Nod, not the warning.
-```yaml
+
+```
 
 ## STRICTNESS_GOD_TIER clang-tidy
 
 The canonical configuration lives at the repository root. The snippet below is
 included here for quick reference – always keep the doc and the file in sync.
 
-```
+```yaml
 Checks: >
   *,
   -llvm-header-guard,
