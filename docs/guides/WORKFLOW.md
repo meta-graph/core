@@ -54,3 +54,18 @@ implementation instead of behaviour.
 - Red bars mean alignment forming—embrace them.
 - Stay in the tidy → integrate → tidy loop: every change starts and ends with
   `clang-tidy -p build`.
+
+### Local CI Matrix on macOS
+
+Need the full CI matrix without burning macOS runner minutes? Use
+`scripts/run-quality-matrix-local.sh` on a Mac host. It mirrors the GitHub
+Actions quality matrix (Debug + Release clang legs), running:
+
+```
+./scripts/run-quality-matrix-local.sh
+```
+
+This reconfigures dedicated build directories under `build-matrix-local`, runs
+`ctest`, invokes `scripts/run-clang-tidy.sh` for Debug, and executes the Release
+security audit. Perfect before release cuts or when you need gate-level
+confidence locally.
