@@ -87,23 +87,6 @@ elseif(CMAKE_C_COMPILER_ID MATCHES "Clang")
         -Wthread-safety-beta
     )
 
-    # Filter out Apple Clang unsupported warnings
-    if(CMAKE_C_COMPILER_ID STREQUAL "AppleClang" OR
-      (CMAKE_C_COMPILER_ID STREQUAL "Clang" AND CMAKE_SYSTEM_NAME STREQUAL "Darwin"))
-        # Apple Clang doesn't support some warnings that regular Clang does
-        list(REMOVE_ITEM METAGRAPH_WARNING_FLAGS
-            -Wcast-align=strict
-            -Wformat-overflow=2
-            -Wformat-truncation=2
-            -Wimplicit-fallthrough=5
-        )
-        # Add simpler versions that Apple Clang supports
-        list(APPEND METAGRAPH_WARNING_FLAGS
-            -Wcast-align
-            -Wimplicit-fallthrough
-        )
-    endif()
-
     # Clang-specific sanitizers
     if(METAGRAPH_SANITIZERS)
         # safe-stack is not supported on all platforms
