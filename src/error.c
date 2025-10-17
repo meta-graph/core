@@ -90,10 +90,8 @@ static const error_string_entry_t METAGRAPH_ERROR_STRINGS[] = {
     {METAGRAPH_ERROR_VERSION_MISMATCH, "Version mismatch"},
 };
 
-enum {
-    METAGRAPH_ERROR_STRING_COUNT =
-        sizeof(METAGRAPH_ERROR_STRINGS) / sizeof(METAGRAPH_ERROR_STRINGS[0])
-};
+#define METAGRAPH_ERROR_STRING_COUNT                                           \
+    (sizeof(METAGRAPH_ERROR_STRINGS) / sizeof(METAGRAPH_ERROR_STRINGS[0]))
 // Ensure table stays in sync with enum
 _Static_assert(METAGRAPH_ERROR_STRING_COUNT == 44,
                "Add new error codes to error_strings table when extending "
@@ -125,8 +123,7 @@ METAGRAPH_ATTR_COLD_CONST
 const char *metagraph_result_to_string(metagraph_result_t result) {
     // Linear search through the table (fine for ~50 entries)
     // If table grows beyond ~200 entries, consider binary search
-    const size_t count =
-        sizeof(METAGRAPH_ERROR_STRINGS) / sizeof(METAGRAPH_ERROR_STRINGS[0]);
+    const size_t count = METAGRAPH_ERROR_STRING_COUNT;
     for (size_t i = 0; i < count; i++) {
         if (METAGRAPH_ERROR_STRINGS[i].code == result) {
             return METAGRAPH_ERROR_STRINGS[i].message;
@@ -177,6 +174,7 @@ static void metagraph_write_message(metagraph_error_context_t *context,
         static const char ellipsis[] = "...";
         const size_t ellipsis_len = sizeof(ellipsis) - 1;
         if (sizeof(context->message) > ellipsis_len + 1) {
+            // Place ellipsis at the end and preserve a null terminator.
             memcpy(context->message + sizeof(context->message) - ellipsis_len -
                        1,
                    ellipsis, ellipsis_len + 1);
