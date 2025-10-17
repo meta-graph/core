@@ -38,6 +38,7 @@ set(METAGRAPH_WARNING_FLAGS
 
 # Security hardening flags (platform-specific)
 set(METAGRAPH_SECURITY_FLAGS
+    -U_FORTIFY_SOURCE
     -D_FORTIFY_SOURCE=3
     -fstack-protector-strong
     -fPIE
