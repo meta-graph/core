@@ -55,17 +55,15 @@ implementation instead of behaviour.
 - Stay in the tidy → integrate → tidy loop: every change starts and ends with
   `clang-tidy -p build`.
 
-### Local CI Matrix on macOS
+### Reproducing the CI Matrix Locally
 
-Need the full CI matrix without burning macOS runner minutes? Use
-`scripts/run-quality-matrix-local.sh` on a Mac host. It mirrors the GitHub
-Actions quality matrix (Debug + Release clang legs), running:
+- **macOS host** – Run `./scripts/run-quality-matrix-local.sh`. This mirrors the
+  mac clang Debug + Release legs (including clang-tidy + security audit) without
+  invoking hosted runners. The build output lives under `build-matrix-local/`
+  and is removed on success unless you pass `--keep-builds`.
 
-```
-./scripts/run-quality-matrix-local.sh
-```
-
-This reconfigures dedicated build directories under `build-matrix-local`, runs
-`ctest`, invokes `scripts/run-clang-tidy.sh` for Debug, and executes the Release
-security audit. Perfect before release cuts or when you need gate-level
-confidence locally.
+- **Linux matrix via Docker** – On any machine with Docker, run
+  `./scripts/run-quality-matrix-docker.sh`. It spins up the same Ubuntu + clang
+  toolchain defined in CI (Debug, Release) and executes the identical pipeline,
+  leaving no residue unless `--keep-builds` is provided. This is the fastest way
+  to rehearse the GitHub Actions quality-matrix job locally.

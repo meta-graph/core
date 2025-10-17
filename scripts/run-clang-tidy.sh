@@ -8,8 +8,9 @@ PROJECT_ROOT="$(CDPATH='' cd -- "$(dirname "$0")/.." && pwd)"
 . "$PROJECT_ROOT/scripts/mg.sh"
 
 CLANG_TIDY="$(command -v clang-tidy)"
+TARGET_BUILD_DIR="${MG_TIDY_BUILD_DIR:-$PROJECT_ROOT/build}"
 CONFIG_FILE="$PROJECT_ROOT/.clang-tidy"
-COMPILE_COMMANDS="$PROJECT_ROOT/build/compile_commands.json"
+COMPILE_COMMANDS="$TARGET_BUILD_DIR/compile_commands.json"
 
 # Check if config exists
 if [ ! -f "$CONFIG_FILE" ]; then
@@ -21,13 +22,13 @@ fi
 ensure_compile_commands() {
     if [ ! -f "$COMPILE_COMMANDS" ]; then
         mg_yellow "📁 Compilation database missing, generating it..."
-        if [ ! -d "$PROJECT_ROOT/build" ]; then
+        if [ ! -d "$TARGET_BUILD_DIR" ]; then
             echo "🔧 Creating build directory..."
-            mkdir -p "$PROJECT_ROOT/build"
+            mkdir -p "$TARGET_BUILD_DIR"
         fi
 
         echo "⚙️  Running CMake to generate compile_commands.json..."
-        if ! cmake -B "$PROJECT_ROOT/build" \
+        if ! cmake -B "$TARGET_BUILD_DIR" \
             -DCMAKE_BUILD_TYPE=Debug \
             -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
             -DCMAKE_UNITY_BUILD=OFF \
@@ -133,7 +134,7 @@ EOF
     set -- "--config-file=$CONFIG_FILE" "--header-filter=.*"
 
     if [ -f "$COMPILE_COMMANDS" ]; then
-        set -- "$@" "-p" "$PROJECT_ROOT/build"
+        set -- "$@" "-p" "$TARGET_BUILD_DIR"
     fi
 
     # Add system headers for macOS if using LLVM clang-tidy

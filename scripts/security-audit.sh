@@ -7,6 +7,8 @@ set -eu
 PROJECT_ROOT="$(CDPATH='' cd -- "$(dirname "$0")/.." && pwd)"
 . "$PROJECT_ROOT/scripts/mg.sh"
 
+readonly BUILD_DIR="${MG_BUILD_DIR:-$PROJECT_ROOT/build}"
+
 print_header() {
     echo "================================================"
     echo "🛡️  MetaGraph Security Audit Suite"
@@ -29,7 +31,7 @@ print_error() {
 analyze_binary_security() {
     print_status "🔒 Analyzing binary security features..."
 
-    binary="./build/bin/mg-cli"
+    binary="$BUILD_DIR/bin/mg-cli"
 
     if [ ! -f "$binary" ]; then
         print_error "Binary not found: $binary"
@@ -127,7 +129,7 @@ scan_dependencies() {
     echo "=== Dependency Analysis ===" >> .ignored/security-audit.txt
 
     # List all linked libraries
-    binary="./build/bin/mg-cli"
+    binary="$BUILD_DIR/bin/mg-cli"
 
     if [ ! -f "$binary" ]; then
         echo "⚠️  Binary not found for dependency analysis" >> .ignored/security-audit.txt
@@ -304,13 +306,13 @@ main() {
     print_header
 
     # Ensure we have a build
-    if [ ! -d "build" ]; then
+    if [ ! -d "$BUILD_DIR" ]; then
         print_status "Building project for security analysis..."
-        cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=clang
-        cmake --build build --parallel
-    elif [ ! -f "build/bin/mg-cli" ]; then
+        cmake -B "$BUILD_DIR" -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=clang
+        cmake --build "$BUILD_DIR" --parallel
+    elif [ ! -f "$BUILD_DIR/bin/mg-cli" ]; then
         print_status "Building missing binaries for security analysis..."
-        cmake --build build --parallel
+        cmake --build "$BUILD_DIR" --parallel
     fi
 
     # Run all security checks
