@@ -8,11 +8,13 @@
 
 Fix a universe of payloads $P$ (raw blobs, metadata, etc.).  Define the class $\mathrm{RMG}$ of **recursive meta-graphs** to be the **least** class closed under the following constructors:
 
-1. **Atoms.** For any $p \in P$, the object $Atom(p)$$ belongs to $\mathrm{RMG}$.
+1. **Atoms.** For any $p \in P$, the object $Atom(p)$ belongs to $\mathrm{RMG}$.
 2. **Graphs.** Let $S = (V, E, s, t)$ be a finite directed multigraph (“1-skeleton”), and let
-   \[
+```math
+   [
        \alpha : V \to \mathrm{RMG}, \qquad \beta : E \to \mathrm{RMG}
-   \]
+   ]
+```
    assign a meta-graph to each vertex and edge respectively.  The triple $(S, \alpha, \beta)$ is an element of $\mathrm{RMG}$.
 
 Minimality ensures well-foundedness: every RMG is built by finitely many applications of these constructors, bottoming out at atoms.  In practice, atoms correspond to graph chunks whose `node_count = edge_count = 0` with payload stored in the bundle’s blob region.
@@ -22,18 +24,22 @@ Minimality ensures well-foundedness: every RMG is built by finitely many applica
 ## 2. Initial-Algebra View
 
 Let $\mathcal{G}$ denote the set of shapes $S = (V,E,s,t)$. Consider the polynomial endofunctor on $\mathbf{Set}$
-\[
+```math
+[
 F(X) = \coprod_{S \in \mathcal{G}} \bigl( (V \to X) \times (E \to X) \bigr) \; + \; P .
-\]
+]
+```
 An RMG is an element of the **initial algebra** $\mu F$.  This formulation yields:
 
-- **Structural recursion (catamorphisms).** For any $F$-algebra $\varphi : F(X) \to X$, there exists a unique homomorphism $\operatorname{fold}_\varphi : \mathrm{RMG} \to X$ defined by
-  \[
+- **Structural recursion (catamorphisms).** For any $F$-algebra $\varphi : F(X) \to X$, there exists a unique homomorphism $fold_\varphi : \mathrm{RMG} \to X$ defined by
+```math
+  [
   \begin{aligned}
-    \operatorname{fold}_\varphi(\operatorname{Atom}(p)) &= \varphi(\operatorname{inr}(p)), \\
-    \operatorname{fold}_\varphi(S,\alpha,\beta) &= \varphi \bigl( \operatorname{inl}(S, \operatorname{fold}_\varphi \circ \alpha, \operatorname{fold}_\varphi \circ \beta) \bigr) .
+    fold_\varphi(Atom(p)) &= \varphi(inr(p)), \\
+    fold_\varphi(S,\alpha,\beta) &= \varphi \bigl( inl(S, fold_\varphi \circ \alpha, fold_\varphi \circ \beta) \bigr) .
   \end{aligned}
-  \]
+  ]
+```
   This is the semantic foundation for `metagraph_fold(...)` style APIs.
 - **Induction principle.** Properties $\mathcal{P}$ on $\mathrm{RMG}$ can be shown by checking $\mathcal{P}$ on atoms and assuming it holds for each attachment when proving it for $(S,\alpha,\beta)$.
 - **Coinduction (optional).** Replacing $\mu F$ by the greatest fixed point $\nu F$ admits possibly infinite unfoldings, useful for live streaming or netlists with recursion.
