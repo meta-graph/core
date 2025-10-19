@@ -280,6 +280,9 @@ static void metagraph_qca_zero_metrics(mg_tick_metrics_t *metrics) {
     if (!metrics) {
         return;
     }
+    metrics->matches_found = 0U;
+    metrics->matches_kept = 0U;
+    metrics->conflicts_dropped = 0U;
     metrics->ms_match = 0.0;
     metrics->ms_kernel = 0.0;
     metrics->ms_rewrite = 0.0;
