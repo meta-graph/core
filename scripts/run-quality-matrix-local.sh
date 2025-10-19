@@ -41,8 +41,8 @@ while [[ $# -gt 0 ]]; do
       exit 1
       ;;
   esac
-  shift || true
-fi
+  shift || break
+done
 
 if ! command -v ninja >/dev/null 2>&1; then
   echo "❌ 'ninja' not found. Install via 'brew install ninja'" >&2
