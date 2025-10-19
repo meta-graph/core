@@ -157,10 +157,11 @@ analyze_memory_safety() {
     echo "=== Memory Safety Analysis ===" >> .ignored/security-audit.txt
 
     # Check if we have test binaries to run
-    if [ ! -f "build/bin/mg_unit_tests" ] && [ ! -f "build/bin/placeholder_test" ]; then
+    if [ ! -f "$BUILD_DIR/bin/mg_unit_tests" ] &&
+       [ ! -f "$BUILD_DIR/bin/placeholder_test" ]; then
         print_warning "No test binaries found - skipping memory safety analysis"
         echo "⚠️  No test binaries for memory safety analysis" >> .ignored/security-audit.txt
-        echo "    Build with 'cmake -B build && cmake --build build' first" >> .ignored/security-audit.txt
+        echo "    Build with 'cmake -B \"$BUILD_DIR\" && cmake --build \"$BUILD_DIR\"' first" >> .ignored/security-audit.txt
         return 0
     fi
 
@@ -169,17 +170,18 @@ analyze_memory_safety() {
         print_status "Building with AddressSanitizer..."
         
         # Build with address sanitizer
-        if cmake -B build-asan \
+        ASAN_BUILD_DIR="${BUILD_DIR}-asan"
+        if cmake -B "$ASAN_BUILD_DIR" \
             -DCMAKE_BUILD_TYPE=Debug \
             -DMETAGRAPH_SANITIZERS=ON \
             -DCMAKE_C_COMPILER=clang >/dev/null 2>&1; then
-            
-            if cmake --build build-asan --parallel >/dev/null 2>&1; then
+
+            if cmake --build "$ASAN_BUILD_DIR" --parallel >/dev/null 2>&1; then
                 # Run tests with ASAN
                 export ASAN_OPTIONS="abort_on_error=1:halt_on_error=1:print_stats=1"
-                
+
                 # Find and run any test binary
-                test_binary=$(find build-asan/bin -name '*test*' -type f 2>/dev/null | head -1)
+                test_binary=$(find "$ASAN_BUILD_DIR/bin" -name '*test*' -type f 2>/dev/null | head -1)
                 if [ -n "$test_binary" ] && [ -f "$test_binary" ]; then
                     if "$test_binary" >/dev/null 2>&1; then
                         echo "✅ AddressSanitizer: No memory safety issues detected" >> .ignored/security-audit.txt
