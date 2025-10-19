@@ -5,6 +5,7 @@
 #include <limits.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
 #ifdef __APPLE__
 #include <mach/mach_time.h>
 #else
@@ -68,6 +69,14 @@ static metagraph_result_t
 metagraph_qca_collect_matches(const mg_rmg_t *rmg, const mg_rule_t *rules,
                               uint32_t rule_count, mg_arena_t *arena,
                               mg_match_set_t *aggregate);
+static void metagraph_qca_apply_rule_x(const mg_graph_t *graph,
+                                       mg_hilbert_t *hilbert,
+                                       const mg_match_t *match);
+static void metagraph_qca_apply_rule_cnot(const mg_graph_t *graph,
+                                          mg_hilbert_t *hilbert,
+                                          const mg_match_t *match);
+static void metagraph_qca_apply_rule_split_w(const mg_graph_t *graph,
+                                             const mg_match_t *match);
 
 static double metagraph_timespec_diff_ms(const struct timespec *start,
                                          const struct timespec *end) {
@@ -203,6 +212,57 @@ static double metagraph_timer_ms(const mg_qca_timer_t *timer) {
     return metagraph_timespec_diff_ms(&timer->start, &timer->end);
 }
 
+static void metagraph_qca_apply_rule_x(const mg_graph_t *graph,
+                                       mg_hilbert_t *hilbert,
+                                       const mg_match_t *match) {
+    if (!graph || !hilbert || !match || match->L_n < 1U) {
+        return;
+    }
+    uint32_t node_index = 0U;
+    if (!metagraph_graph_find_index_by_id(graph, match->L2G_node[0],
+                                          &node_index)) {
+        return;
+    }
+    if (node_index < hilbert->node_count) {
+        hilbert->node_bits[node_index] ^= 1U;
+    }
+}
+
+static void metagraph_qca_apply_rule_cnot(const mg_graph_t *graph,
+                                          mg_hilbert_t *hilbert,
+                                          const mg_match_t *match) {
+    if (!graph || !hilbert || !match || match->L_n < 2U) {
+        return;
+    }
+    uint32_t control_index = 0U;
+    uint32_t target_index = 0U;
+    if (!metagraph_graph_find_index_by_id(graph, match->L2G_node[0],
+                                          &control_index)) {
+        return;
+    }
+    if (!metagraph_graph_find_index_by_id(graph, match->L2G_node[1],
+                                          &target_index)) {
+        return;
+    }
+    if (control_index < hilbert->node_count &&
+        target_index < hilbert->node_count &&
+        hilbert->node_bits[control_index] != 0U) {
+        hilbert->node_bits[target_index] ^= 1U;
+    }
+}
+
+static void metagraph_qca_apply_rule_split_w(const mg_graph_t *graph,
+                                             const mg_match_t *match) {
+    (void)graph;
+    (void)match;
+    /*
+     * The split_w rule rewires topology by inserting an intermediate node.
+     * The Hilbert state for existing nodes is unaffected and newly created
+     * nodes are initialised during commit, so no additional work is required
+     * here beyond acknowledging the match.
+     */
+}
+
 static bool metagraph_timer_valid(const mg_qca_timer_t *timer) {
     if (!timer) {
         return false;
@@ -295,33 +355,18 @@ static void metagraph_qca_apply_matches(const mg_graph_t *graph,
     }
     for (uint32_t index = 0; index < schedule->count; ++index) {
         const mg_match_t *match = &schedule->data[index];
-        if (match->rule_id == 1 && match->L_n >= 1U) {
-            uint32_t node_index = 0U;
-            if (!metagraph_graph_find_index_by_id(graph, match->L2G_node[0],
-                                                  &node_index)) {
-                continue;
-            }
-            if (node_index < hilbert->node_count) {
-                hilbert->node_bits[node_index] ^= 1U;
-            }
-            continue;
-        }
-        if (match->rule_id == 2 && match->L_n >= 2U) {
-            uint32_t control_index = 0U;
-            uint32_t target_index = 0U;
-            if (!metagraph_graph_find_index_by_id(graph, match->L2G_node[0],
-                                                  &control_index)) {
-                continue;
-            }
-            if (!metagraph_graph_find_index_by_id(graph, match->L2G_node[1],
-                                                  &target_index)) {
-                continue;
-            }
-            if (control_index < hilbert->node_count &&
-                target_index < hilbert->node_count &&
-                hilbert->node_bits[control_index] != 0U) {
-                hilbert->node_bits[target_index] ^= 1U;
-            }
+        switch (match->rule_id) {
+        case 1U:
+            metagraph_qca_apply_rule_x(graph, hilbert, match);
+            break;
+        case 2U:
+            metagraph_qca_apply_rule_cnot(graph, hilbert, match);
+            break;
+        case 3U:
+            metagraph_qca_apply_rule_split_w(graph, match);
+            break;
+        default:
+            break;
         }
     }
 }
