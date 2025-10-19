@@ -64,12 +64,18 @@ ctest --test-dir "$BUILD_DIR" --output-on-failure --parallel
 
 if [[ "$BUILD_TYPE" == "Debug" ]]; then
   printf '🔍 Running clang-tidy (Debug leg)\n'
-  MG_TIDY_BUILD_DIR="$BUILD_DIR" \
-    (cd "$ROOT_DIR" && ./scripts/run-clang-tidy.sh --check)
+  (
+    export MG_TIDY_BUILD_DIR="$BUILD_DIR"
+    cd "$ROOT_DIR"
+    ./scripts/run-clang-tidy.sh --check
+  )
 else
   printf '🛡️  Running security audit (Release leg)\n'
-  MG_BUILD_DIR="$BUILD_DIR" \
-    (cd "$ROOT_DIR" && ./scripts/security-audit.sh)
+  (
+    export MG_BUILD_DIR="$BUILD_DIR"
+    cd "$ROOT_DIR"
+    ./scripts/security-audit.sh
+  )
 fi
 
 printf '✅ Completed %s leg\n' "$BUILD_TYPE"
