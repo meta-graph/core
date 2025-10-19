@@ -57,13 +57,24 @@ implementation instead of behaviour.
 
 ### Reproducing the CI Matrix Locally
 
-- **macOS host** – Run `./scripts/run-quality-matrix-local.sh`. This mirrors the
+- **macOS host** – Run the helper script locally:
+
+```bash
+./scripts/run-quality-matrix-local.sh
+```
+
+  This mirrors the
   mac clang Debug + Release legs (including clang-tidy + security audit) without
   invoking hosted runners. The build output lives under `build-matrix-local/`
   and is removed on success unless you pass `--keep-builds`.
 
-- **Linux matrix via Docker** – On any machine with Docker, run
-  `./scripts/run-quality-matrix-docker.sh`. It spins up the same Ubuntu + clang
+- **Linux matrix via Docker** – On any machine with Docker, run:
+
+```bash
+./scripts/run-quality-matrix-docker.sh
+```
+
+  It spins up the same Ubuntu + clang
   toolchain defined in CI (Debug, Release) and executes the identical pipeline,
   leaving no residue unless `--keep-builds` is provided. This is the fastest way
   to rehearse the GitHub Actions quality-matrix job locally.
