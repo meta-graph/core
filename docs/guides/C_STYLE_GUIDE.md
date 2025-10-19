@@ -46,88 +46,90 @@ Get the Nod, not the warning.
 
 ## STRICTNESS_GOD_TIER clang-tidy
 
-The canonical configuration lives at the repository root. The snippet below is
-included here for quick reference – always keep the doc and the file in sync.
+The canonical configuration lives at the repository root in `.clang-tidy`. The
+snippet below mirrors that file for quick reference; if this doc and the root
+file ever diverge, treat the root as the source of truth.
 
 ```yaml
 Checks: >
-  *,
-  -llvm-header-guard,
-  -fuchsia-*,
-  -objc-*,
-  -android-*,
-  -zircon-*,
+  -*,
   bugprone-*,
   cert-*,
-  cppcoreguidelines-*,
-  hicpp-*,
-  modernize-*,
-  readability-*,
+  clang-analyzer-*,
+  concurrency-*,
+  misc-*,
   performance-*,
   portability-*,
-  clang-analyzer-*,
-  misc-*,
-  clangdiagnostic-*,
-  concurrency-*,
-  cplusplus-*,
-  linuxkernel-*,
-  unix-*,
-  security-*,
-  -abseil-*,
-  -google-*,
-  -mpi-*,
-  -android-cloexec-fopen
+  readability-*,
+  -readability-magic-numbers,
+  -bugprone-easily-swappable-parameters
 
 WarningsAsErrors: '*'
-HeaderFilterRegex: '.*'
-AnalyzeTemporaryDtors: true
-FormatStyle: file
-InheritParentConfig: false
+HeaderFilterRegex: '(include|src)/.*\.(h|c)$'
 
 CheckOptions:
-  - key: readability-identifier-naming.VariableCase
+  - key: readability-identifier-naming.TypedefCase
     value: lower_case
+  - key: readability-identifier-naming.TypedefSuffix
+    value: '_t'
+  - key: readability-identifier-naming.StructCase
+    value: lower_case
+  - key: readability-identifier-naming.UnionCase
+    value: lower_case
+  - key: readability-identifier-naming.EnumCase
+    value: lower_case
+  - key: readability-identifier-naming.EnumConstantCase
+    value: UPPER_CASE
+  - key: readability-identifier-naming.EnumConstantPrefix
+    value: 'METAGRAPH_'
   - key: readability-identifier-naming.FunctionCase
     value: lower_case
   - key: readability-identifier-naming.FunctionPrefix
     value: ''
+  - key: readability-identifier-naming.VariableCase
+    value: lower_case
+  - key: readability-identifier-naming.ParameterCase
+    value: lower_case
   - key: readability-identifier-naming.MacroDefinitionCase
     value: UPPER_CASE
-  - key: readability-identifier-naming.EnumConstantCase
+  - key: readability-identifier-naming.MacroDefinitionPrefix
+    value: 'METAGRAPH_'
+  - key: readability-identifier-naming.GlobalConstantCase
     value: UPPER_CASE
-  - key: readability-braces-around-statements.ShortStatementLines
-    value: 0
-  - key: readability-function-size.LineThreshold
-    value: 50
-  - key: readability-magic-numbers.IgnoredNumericLiterals
-    value: '0,1,-1'
-  - key: readability-magic-numbers.IgnorePowersOfTwo
-    value: false
-  - key: bugprone-branch-clone.IgnoreEmptyBranches
-    value: false
-  - key: modernize-use-nullptr.NullMacros
-    value: 'NULL'
-  - key: readability-uppercase-literal-suffix.IgnoreMacros
-    value: false
-  - key: readability-named-parameter.IgnoreMainLikeFunctions
-    value: false
+  - key: readability-identifier-naming.GlobalConstantPrefix
+    value: 'METAGRAPH_'
   - key: readability-function-cognitive-complexity.Threshold
-    value: 10
+    value: '25'
+  - key: readability-function-size.LineThreshold
+    value: '50'
   - key: readability-function-size.StatementThreshold
-    value: 60
+    value: '60'
   - key: readability-function-size.BranchThreshold
-    value: 15
+    value: '15'
+  - key: readability-function-size.ParameterThreshold
+    value: '8'
   - key: readability-function-size.NestingThreshold
-    value: 3
-  - key: readability-convert-member-functions-to-static.Enabled
+    value: '5'
+  - key: bugprone-suspicious-string-compare.WarnOnImplicitComparison
     value: true
-  - key: cppcoreguidelines-owning-memory
+  - key: bugprone-suspicious-string-compare.WarnOnLogicalNotComparison
     value: true
-  - key: cert-dcl03-c.UseConst
+  - key: cert-err33-c.CheckedFunctions
+    value: '::aligned_alloc;::calloc;::clock;::fclose;::ferror;::fflush;::fgetc;::fgetpos;::fgets;::fgetwc;::fopen;::fprintf;::fputc;::fputs;::fputwc;::fread;::freopen;::fscanf;::fseek;::fsetpos;::ftell;::fwprintf;::fwrite;::fwscanf;::getc;::getchar;::gets;::getwc;::getwchar;::gmtime;::localtime;::malloc;::mbrtowc;::mbsrtowcs;::mbstowcs;::memchr;::mktime;::printf;::putc;::putchar;::puts;::putwc;::putwchar;::raise;::realloc;::remove;::rename;::scanf;::setlocale;::setvbuf;::signal;::snprintf;::sprintf;::sscanf;::strchr;::strerror_s;::strftime;::strpbrk;::strrchr;::strstr;::strtod;::strtof;::strtoimax;::strtok;::strtol;::strtoll;::strtoul;::strtoull;::strtoumax;::strxfrm;::swprintf;::swscanf;::time;::tmpfile;::tmpnam;::ungetc;::ungetwc;::vfprintf;::vfscanf;::vfwprintf;::vfwscanf;::vprintf;::vscanf;::vsnprintf;::vsprintf;::vsscanf;::vswprintf;::vswscanf;::vwprintf;::vwscanf;::wcrtomb;::wcschr;::wcsftime;::wcspbrk;::wcsrchr;::wcsrtombs;::wcsstr;::wcstod;::wcstof;::wcstoimax;::wcstok;::wcstol;::wcstoll;::wcstombs;::wcstoul;::wcstoull;::wcstoumax;::wcsxfrm;::wctob;::wmemchr;::wprintf;::wscanf'
+  - key: performance-move-const-arg.CheckTriviallyCopyableMove
+    value: false
+  - key: performance-no-automatic-move.AllowedTypes
+    value: ''
+  - key: modernize-replace-auto-ptr.IncludeStyle
+    value: google
+  - key: modernize-use-auto.MinTypeNameLength
+    value: '5'
+  - key: modernize-use-auto.RemoveStars
+    value: false
+  - key: portability-restrict-system-includes.Includes
+    value: '*'
+  - key: misc-misplaced-const.CheckPrimitiveCasts
     value: true
-
-ExtraArgs: ["-Wall", "-Wextra", "-Werror", "-std=c23", "-pedantic",
-"-fstack-protector-strong", "-D_FORTIFY_SOURCE=3"]
 ```
 
 **TL;DR:** every warning is fatal; keep functions ≤50 lines / 60 statements /
