@@ -28,6 +28,8 @@ ensure_compile_commands() {
         fi
 
         echo "⚙️  Running CMake to generate compile_commands.json..."
+        # Note: METAGRAPH_DEV=ON enables development-time artefacts required
+        # for linting (e.g., headers that are not part of release bundles).
         if ! cmake -B "$TARGET_BUILD_DIR" \
             -DCMAKE_BUILD_TYPE=Debug \
             -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
@@ -88,6 +90,9 @@ OPTIONS:
     --fix, -f       Fix issues that can be auto-fixed
     --verbose, -v   Verbose output
     --help, -h      Show this help
+
+ENVIRONMENT VARIABLES:
+    MG_TIDY_BUILD_DIR   Target build directory (default: $PROJECT_ROOT/build)
 
 EXAMPLES:
     $0 --check      # Run static analysis
