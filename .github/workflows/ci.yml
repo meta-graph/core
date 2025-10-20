@@ -42,7 +42,10 @@ jobs:
           cmake ninja-build \
           clang-tidy-${{ env.LLVM_VERSION }} \
           clang-format-${{ env.LLVM_VERSION }} \
-          valgrind
+          valgrind \
+          python3-pip
+        python3 -m pip install --user semgrep
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
 
     - name: Configure CMake
       env:
@@ -167,8 +170,8 @@ jobs:
 
     - name: Test
       run: |
-        LLVM_PROFILE_FILE="coverage-%p.profraw" ctest --test-dir build --output-on-failure
-        llvm-profdata-18 merge -sparse coverage-*.profraw -o coverage.profdata
+        LLVM_PROFILE_FILE="build/coverage-%p.profraw" ctest --test-dir build --output-on-failure
+        llvm-profdata-18 merge -sparse build/coverage-*.profraw -o coverage.profdata
         llvm-cov-18 report ./build/bin/* -instr-profile=coverage.profdata
         # Export LCOV for Codecov
         llvm-cov-18 export ./build/bin/* -instr-profile=coverage.profdata -format=lcov > coverage.lcov

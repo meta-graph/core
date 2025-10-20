@@ -5,8 +5,6 @@
 #include <time.h>
 #ifdef __APPLE__
 #include <mach/mach_time.h>
-#else
-#include <sys/time.h>
 #endif
 
 #include "metagraph/qca.h"
@@ -181,13 +179,7 @@ static bool metagraph_monotonic_now(struct timespec *out) {
         return true;
     }
 
-    struct timeval wall_time;
-    if (gettimeofday(&wall_time, NULL) != 0) {
-        return false;
-    }
-    out->tv_sec = wall_time.tv_sec;
-    out->tv_nsec = (long)wall_time.tv_usec * 1000L;
-    return true;
+    return false;
 #endif
 }
 
