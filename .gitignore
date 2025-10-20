@@ -93,5 +93,8 @@ missing
 *.core
 vgcore.*
 
+# Node.js tooling
+node_modules/
+
 # Performance baseline (machine-dependent, not tracked)
 performance-baseline.txt

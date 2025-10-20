@@ -1,7 +1,8 @@
 # Agent Debrief Format
 
-Append one JSON object per line to `AGENTS.md` under **PAST PERSPECTIVES™** at
-the end of each session. Use the following schema:
+Append one JSON object per line to `DEBRIEF.json` at the end of each session.
+The file is treated as JSON Lines (JSONL), so each entry MUST stay on a single
+line. Use the following schema:
 
 ```json
 {
@@ -27,6 +28,8 @@ the end of each session. Use the following schema:
 
 Guidelines:
 
+- Write entries to `DEBRIEF.json` in the repository root; do not duplicate
+  content in `AGENTS.md`.
 - JSON must remain single-line (JSONL format).
 - Append only; never rewrite or reflow existing entries.
 - Fill in today’s date/time automatically in UTC-8 (PST) unless otherwise

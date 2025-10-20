@@ -138,6 +138,10 @@ jobs:
           memory)
             EXTRA_SANITIZER_FLAGS="$EXTRA_SANITIZER_FLAGS -DMETAGRAPH_ASAN=OFF -DMETAGRAPH_UBSAN=OFF -DMETAGRAPH_TSAN=OFF -DMETAGRAPH_MSAN=ON"
             ;;
+          *)
+            echo "Unsupported sanitizer '$SAN'. Expected one of: address, undefined, thread, memory." >&2
+            exit 1
+            ;;
         esac
 
         cmake -B build -G Ninja \
@@ -236,6 +240,13 @@ jobs:
 
     - name: Build compile database
       run: cmake --build build --parallel
+
+    - name: Verify compile database
+      run: |
+        if [ ! -f build/compile_commands.json ]; then
+          echo "Error: compile_commands.json not generated; build may have failed" >&2
+          exit 1
+        fi
 
     - name: Run GNU-GON-CRY-GOD-TIER-SUPERSTRICT™ clang-tidy
       env:

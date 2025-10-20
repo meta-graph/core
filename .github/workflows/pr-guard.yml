@@ -38,6 +38,9 @@ jobs:
             "$PR_HEAD_SHA" \
             "$PR_BASE_REF"
 
+      - name: Install commitlint tooling
+        run: npm ci
+
       - name: Conventional-commit lint
         env:
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
