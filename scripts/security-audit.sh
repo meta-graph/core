@@ -71,12 +71,23 @@ analyze_binary_security() {
             echo "❌ Stack protection: DISABLED" >> .ignored/security-audit.txt
         fi
 
-        # Check for PIE
-        if file "$binary" | grep -q "shared object"; then
-            echo "✅ PIE (Position Independent Executable): ENABLED" >> .ignored/security-audit.txt
-        elif file "$binary" | grep -q "Mach-O.*executable.*PIE"; then
-            echo "✅ PIE (Position Independent Executable): ENABLED" >> .ignored/security-audit.txt
+        pie_output="$(file "$binary" 2>/dev/null || true)"
+        pie_enabled=false
+
+        if echo "$pie_output" | grep -qi "shared object"; then
+            pie_enabled=true
+        elif echo "$pie_output" | grep -qi "pie executable"; then
+            pie_enabled=true
+        elif echo "$pie_output" | grep -q "Mach-O.*executable.*PIE"; then
+            pie_enabled=true
         elif otool -hv "$binary" 2>/dev/null | grep -q "PIE"; then
+            pie_enabled=true
+        elif command -v readelf >/dev/null 2>&1 && \
+            readelf -h "$binary" 2>/dev/null | grep -q "Type:[[:space:]]*DYN"; then
+            pie_enabled=true
+        fi
+
+        if [ "$pie_enabled" = true ]; then
             echo "✅ PIE (Position Independent Executable): ENABLED" >> .ignored/security-audit.txt
         else
             echo "❌ PIE: DISABLED" >> .ignored/security-audit.txt
