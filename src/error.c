@@ -205,10 +205,13 @@ metagraph_builder_append_unsigned(metagraph_message_builder_t *builder,
                                   bool uppercase) {
     if (base < 2U) {
         base = 10U;
+    } else if (base > 16U) {
+        base = 16U;
     }
     char digits[64];
-    _Static_assert(sizeof(digits) >= 64U,
-                   "digits buffer must accommodate 64-bit conversion");
+    typedef char
+        metagraph_digits_static_assert_t[(sizeof digits >= 64U) ? 1 : -1];
+    (void)sizeof(metagraph_digits_static_assert_t);
     const char *alphabet = "0123456789abcdef";
     if (uppercase) {
         alphabet = "0123456789ABCDEF";
