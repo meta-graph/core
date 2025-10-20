@@ -122,11 +122,29 @@ jobs:
         CC: clang-18
         CXX: clang++-18
       run: |
+        SAN="${{ matrix.sanitizer }}"
+        EXTRA_SANITIZER_FLAGS="-DMETAGRAPH_SANITIZERS=ON"
+
+        case "$SAN" in
+          address)
+            EXTRA_SANITIZER_FLAGS="$EXTRA_SANITIZER_FLAGS -DMETAGRAPH_ASAN=ON -DMETAGRAPH_UBSAN=ON -DMETAGRAPH_TSAN=OFF -DMETAGRAPH_MSAN=OFF"
+            ;;
+          undefined)
+            EXTRA_SANITIZER_FLAGS="$EXTRA_SANITIZER_FLAGS -DMETAGRAPH_ASAN=OFF -DMETAGRAPH_UBSAN=ON -DMETAGRAPH_TSAN=OFF -DMETAGRAPH_MSAN=OFF"
+            ;;
+          thread)
+            EXTRA_SANITIZER_FLAGS="$EXTRA_SANITIZER_FLAGS -DMETAGRAPH_ASAN=OFF -DMETAGRAPH_UBSAN=OFF -DMETAGRAPH_TSAN=ON -DMETAGRAPH_MSAN=OFF"
+            ;;
+          memory)
+            EXTRA_SANITIZER_FLAGS="$EXTRA_SANITIZER_FLAGS -DMETAGRAPH_ASAN=OFF -DMETAGRAPH_UBSAN=OFF -DMETAGRAPH_TSAN=OFF -DMETAGRAPH_MSAN=ON"
+            ;;
+        esac
+
         cmake -B build -G Ninja \
           -DCMAKE_BUILD_TYPE=Debug \
-          -DMETAGRAPH_SANITIZERS=ON \
-          -DCMAKE_C_FLAGS="-fsanitize=${{ matrix.sanitizer }} -fno-omit-frame-pointer" \
-          -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=${{ matrix.sanitizer }}"
+          ${EXTRA_SANITIZER_FLAGS} \
+          -DCMAKE_C_FLAGS="-fsanitize=${SAN} -fno-omit-frame-pointer" \
+          -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=${SAN}"
 
     - name: Build
       run: cmake --build build
