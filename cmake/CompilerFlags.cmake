@@ -88,19 +88,19 @@ elseif(CMAKE_C_COMPILER_ID MATCHES "Clang")
         -Wthread-safety-beta
     )
 
-    # Clang-specific sanitizers
+    # Clang-specific hardening
     if(METAGRAPH_SANITIZERS)
-        # safe-stack is not supported on all platforms
-        if(NOT CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-            list(APPEND METAGRAPH_SECURITY_FLAGS
-                -fsanitize=safe-stack
-            )
-        endif()
-
         # CFI requires LTO
         if(CMAKE_INTERPROCEDURAL_OPTIMIZATION)
             list(APPEND METAGRAPH_SECURITY_FLAGS
                 -fsanitize=cfi
+            )
+        endif()
+    else()
+        # safe-stack is not supported on all platforms and conflicts with ASAN
+        if(NOT CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+            list(APPEND METAGRAPH_SECURITY_FLAGS
+                -fsanitize=safe-stack
             )
         endif()
     endif()

@@ -129,16 +129,17 @@ find_program(VALGRIND_PROGRAM valgrind)
 if(VALGRIND_PROGRAM)
     message(STATUS "Valgrind found: ${VALGRIND_PROGRAM}")
 
-    # Custom target for Valgrind testing
-    add_custom_target(valgrind
-        COMMAND ${VALGRIND_PROGRAM}
-            --leak-check=full
-            --show-leak-kinds=all
-            --track-origins=yes
-            --verbose
-            --log-file=valgrind-out.txt
-            $<TARGET_FILE:METAGRAPH_tests>
-        DEPENDS mg_tests
-        COMMENT "Running tests under Valgrind"
-    )
+    if(TARGET mg_tests)
+        add_custom_target(valgrind
+            COMMAND ${VALGRIND_PROGRAM}
+                --leak-check=full
+                --show-leak-kinds=all
+                --track-origins=yes
+                --verbose
+                --log-file=valgrind-out.txt
+                $<TARGET_FILE:mg_tests>
+            DEPENDS mg_tests
+            COMMENT "Running tests under Valgrind"
+        )
+    endif()
 endif()
