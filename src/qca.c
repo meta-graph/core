@@ -1,17 +1,13 @@
-#ifndef _POSIX_C_SOURCE
-#define _POSIX_C_SOURCE 200809L
-#endif
-
 #include <limits.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <time.h>
 #ifdef __APPLE__
 #include <mach/mach_time.h>
 #else
 #include <sys/time.h>
 #endif
-#include <time.h>
 
 #include "metagraph/qca.h"
 
@@ -176,7 +172,12 @@ static bool metagraph_monotonic_now(struct timespec *out) {
     out->tv_nsec = (long)(nanoseconds % 1000000000ULL);
     return true;
 #else
-    if (clock_gettime(CLOCK_MONOTONIC, out) == 0) {
+#if defined(TIME_MONOTONIC)
+    if (timespec_get(out, TIME_MONOTONIC) != 0) {
+        return true;
+    }
+#endif
+    if (timespec_get(out, TIME_UTC) != 0) {
         return true;
     }
 

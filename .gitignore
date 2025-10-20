@@ -38,6 +38,7 @@ DerivedData/
 # Build directories
 build/
 build-*/
+build-asan/
 compile_commands.json
 dist/
 bin/

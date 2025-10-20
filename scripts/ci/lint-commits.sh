@@ -27,4 +27,4 @@ fi
 
 merge_base="$(git merge-base "$base_ref" "$HEAD_SHA")"
 
-npx --yes @commitlint/cli@18 --from "$merge_base" --to "$HEAD_SHA"
+npx --yes -p @commitlint/cli@18 -p @commitlint/config-conventional@18 commitlint --from "$merge_base" --to "$HEAD_SHA"

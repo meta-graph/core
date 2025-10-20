@@ -10,6 +10,7 @@
 
 #include "metagraph/base.h"
 #include "metagraph/result.h"
+#include <assert.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -94,9 +95,9 @@ static const error_string_entry_t METAGRAPH_ERROR_STRINGS[] = {
 #define METAGRAPH_ERROR_STRING_COUNT                                           \
     (sizeof(METAGRAPH_ERROR_STRINGS) / sizeof(METAGRAPH_ERROR_STRINGS[0]))
 // Ensure table stays in sync with enum
-_Static_assert(METAGRAPH_ERROR_STRING_COUNT == 44,
-               "Add new error codes to error_strings table when extending "
-               "metagraph_result_t");
+static_assert(METAGRAPH_ERROR_STRING_COUNT == 44,
+              "Add new error codes to error_strings table when extending "
+              "metagraph_result_t");
 
 #ifdef __has_attribute
 #if __has_attribute(cold)
@@ -206,8 +207,8 @@ metagraph_builder_append_unsigned(metagraph_message_builder_t *builder,
         base = 10U;
     }
     char digits[64];
-    _Static_assert(sizeof(digits) >= 64,
-                   "digits buffer must accommodate 64-bit conversion");
+    static_assert(sizeof(digits) >= 64,
+                  "digits buffer must accommodate 64-bit conversion");
     const char *alphabet = "0123456789abcdef";
     if (uppercase) {
         alphabet = "0123456789ABCDEF";
