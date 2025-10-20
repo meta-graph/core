@@ -38,5 +38,10 @@ RUN ln -sf /usr/bin/clang-${LLVM_VERSION} /usr/bin/clang && \
 
 RUN pip3 install --no-cache-dir semgrep
 
+RUN useradd --create-home --shell /bin/bash metagraph && \
+    mkdir -p /workspace && chown -R metagraph:metagraph /workspace
+
+USER metagraph
+
 WORKDIR /workspace
 CMD ["bash"]

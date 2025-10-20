@@ -12,3 +12,6 @@ services:
     volumes:
       - ../..:/workspace
     platform: linux/amd64
+    security_opt:
+      - no-new-privileges:true
+    read_only: true

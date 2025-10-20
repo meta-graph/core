@@ -109,7 +109,7 @@ scan_source_code() {
     # Check for dangerous functions
     dangerous_functions="strcpy strcat sprintf gets scanf"
     for func in $dangerous_functions; do
-        if grep -r "$func" src/ include/ 2>/dev/null; then
+        if grep -R --include='*.c' --include='*.h' -n -E "\\b${func}\\b" src/ include/ 2>/dev/null; then
             echo "⚠️  Found potentially dangerous function: $func" >> .ignored/security-audit.txt
         fi
     done

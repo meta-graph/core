@@ -170,8 +170,8 @@ static bool metagraph_monotonic_now(struct timespec *out) {
     out->tv_nsec = (long)(nanoseconds % 1000000000ULL);
     return true;
 #else
-#if defined(TIME_MONOTONIC)
-    if (timespec_get(out, TIME_MONOTONIC) != 0) {
+#if defined(CLOCK_MONOTONIC)
+    if (clock_gettime(CLOCK_MONOTONIC, out) == 0) {
         return true;
     }
 #endif

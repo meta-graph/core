@@ -170,8 +170,13 @@ jobs:
 
     - name: Test
       run: |
-        LLVM_PROFILE_FILE="build/coverage-%p.profraw" ctest --test-dir build --output-on-failure
-        llvm-profdata-18 merge -sparse build/coverage-*.profraw -o coverage.profdata
+        PROFILE_DIR="${{ github.workspace }}/build"
+        LLVM_PROFILE_FILE="$PROFILE_DIR/coverage-%p.profraw" ctest --test-dir build --output-on-failure
+        if ! ls "$PROFILE_DIR"/coverage-*.profraw >/dev/null 2>&1; then
+          echo "No coverage profiles generated"
+          exit 1
+        fi
+        llvm-profdata-18 merge -sparse "$PROFILE_DIR"/coverage-*.profraw -o coverage.profdata
         llvm-cov-18 report ./build/bin/* -instr-profile=coverage.profdata
         # Export LCOV for Codecov
         llvm-cov-18 export ./build/bin/* -instr-profile=coverage.profdata -format=lcov > coverage.lcov

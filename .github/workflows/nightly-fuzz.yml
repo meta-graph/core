@@ -64,12 +64,16 @@ jobs:
         fi
 
     - name: Run fuzzing
+      env:
+        DURATION: ${{ github.event.inputs.duration || 3600 }}
+        ASAN_OPTIONS: detect_leaks=1:check_initialization_order=1:strict_string_checks=1:print_stats=1
+        UBSAN_OPTIONS: print_stacktrace=1:halt_on_error=0:print_module_map=1
       run: |
-        DURATION=${{ github.event.inputs.duration || 3600 }}
-        
+        DURATION="$DURATION"
+
         ./build-fuzz/tests/fuzz/fuzz-${{ matrix.target }} \
           corpus/${{ matrix.target }} \
-          -max_total_time=$DURATION \
+          -max_total_time="$DURATION" \
           -print_final_stats=1 \
           -jobs=$(nproc) \
           -workers=$(nproc) \
@@ -77,9 +81,6 @@ jobs:
           -timeout=30 \
           -rss_limit_mb=4096 \
           -artifact_prefix=crashes/
-      env:
-        ASAN_OPTIONS: detect_leaks=1:check_initialization_order=1:strict_string_checks=1:print_stats=1
-        UBSAN_OPTIONS: print_stacktrace=1:halt_on_error=0:print_module_map=1
 
     - name: Check for crashes
       id: check_crashes
