@@ -50,13 +50,25 @@ analyze_binary_security() {
     elif command -v objdump >/dev/null 2>&1; then
         echo "Security Features Check:" >> .ignored/security-audit.txt
 
-        # Check for stack canaries
+        has_stack_protection=false
+
+        # Check for traditional stack protector symbol
         if objdump -d "$binary" 2>/dev/null | grep -q "__stack_chk_fail"; then
-            echo "✅ Stack canaries: ENABLED" >> .ignored/security-audit.txt
+            has_stack_protection=true
         elif nm "$binary" 2>/dev/null | grep -q "__stack_chk_fail"; then
-            echo "✅ Stack canaries: ENABLED" >> .ignored/security-audit.txt
+            has_stack_protection=true
+        fi
+
+        # Safe stack runtime symbol indicates hardened stack usage on Clang
+        if [ "$has_stack_protection" = false ] \
+            && nm -D "$binary" 2>/dev/null | grep -q "__safestack_unsafe_stack_ptr"; then
+            has_stack_protection=true
+        fi
+
+        if [ "$has_stack_protection" = true ]; then
+            echo "✅ Stack protection: ENABLED" >> .ignored/security-audit.txt
         else
-            echo "❌ Stack canaries: DISABLED" >> .ignored/security-audit.txt
+            echo "❌ Stack protection: DISABLED" >> .ignored/security-audit.txt
         fi
 
         # Check for PIE
@@ -72,7 +84,7 @@ analyze_binary_security() {
     fi
 
     # Check for debugging symbols
-    if objdump -h "$binary" | grep -q "debug"; then
+    if objdump -h "$binary" 2>/dev/null | grep -q "debug"; then
         echo "⚠️  Debug symbols: PRESENT (should be stripped for release)" >> .ignored/security-audit.txt
     else
         echo "✅ Debug symbols: STRIPPED" >> .ignored/security-audit.txt
@@ -335,6 +347,9 @@ main() {
     # Check if any critical issues were found
     if grep -q "❌\|CRITICAL" .ignored/security-audit.txt; then
         print_error "Critical security issues found! Review .ignored/security-audit.txt"
+        echo "----- BEGIN security-audit.txt -----"
+        cat .ignored/security-audit.txt
+        echo "------ END security-audit.txt ------"
         exit 1
     else
         print_status "✅ No critical security issues detected"
