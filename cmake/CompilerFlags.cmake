@@ -44,6 +44,8 @@ set(METAGRAPH_SECURITY_FLAGS
     -fPIE
 )
 
+set(METAGRAPH_SECURITY_LINK_FLAGS)
+
 # Platform-specific security flags
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     list(APPEND METAGRAPH_SECURITY_FLAGS
@@ -102,6 +104,9 @@ elseif(CMAKE_C_COMPILER_ID MATCHES "Clang")
             list(APPEND METAGRAPH_SECURITY_FLAGS
                 -fsanitize=safe-stack
             )
+            list(APPEND METAGRAPH_SECURITY_LINK_FLAGS
+                -fsanitize=safe-stack
+            )
         endif()
     endif()
 elseif(CMAKE_C_COMPILER_ID STREQUAL "MSVC")
@@ -124,6 +129,10 @@ endif()
 # Apply warning flags to all targets
 add_compile_options(${METAGRAPH_WARNING_FLAGS})
 add_compile_options(${METAGRAPH_SECURITY_FLAGS})
+
+if(METAGRAPH_SECURITY_LINK_FLAGS)
+    add_link_options(${METAGRAPH_SECURITY_LINK_FLAGS})
+endif()
 
 # Enable PIE for all builds (not just release)
 if(NOT CMAKE_C_COMPILER_ID STREQUAL "MSVC")
