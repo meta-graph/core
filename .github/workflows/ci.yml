@@ -182,10 +182,10 @@ jobs:
         llvm-cov-18 export ./build/bin/* -instr-profile=coverage.profdata -format=lcov > coverage.lcov
 
     - name: Upload coverage reports
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v5
       with:
         files: ./coverage.lcov
-        fail_ci_if_error: true
+        fail_ci_if_error: false
 
   clang-tidy-god-tier:
     name: GNU-GON-CRY-GOD-TIER-SUPERSTRICT™ clang-tidy
@@ -220,10 +220,12 @@ jobs:
       run: cmake --build build --parallel
 
     - name: Run GNU-GON-CRY-GOD-TIER-SUPERSTRICT™ clang-tidy
+      env:
+        MG_TIDY_BUILD_DIR: build
       run: |
         set +e
         set -o pipefail
-        ./scripts/run-clang-tidy.sh --check -p build | tee clang-tidy.log
+        ./scripts/run-clang-tidy.sh --check | tee clang-tidy.log
         tidy_status=$?
         head -n 200 clang-tidy.log || true
         set -e

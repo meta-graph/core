@@ -69,14 +69,12 @@ jobs:
         ASAN_OPTIONS: detect_leaks=1:check_initialization_order=1:strict_string_checks=1:print_stats=1
         UBSAN_OPTIONS: print_stacktrace=1:halt_on_error=0:print_module_map=1
       run: |
-        DURATION="$DURATION"
-
         ./build-fuzz/tests/fuzz/fuzz-${{ matrix.target }} \
           corpus/${{ matrix.target }} \
           -max_total_time="$DURATION" \
           -print_final_stats=1 \
-          -jobs=$(nproc) \
-          -workers=$(nproc) \
+          -jobs="$(nproc)" \
+          -workers="$(nproc)" \
           -max_len=1048576 \
           -timeout=30 \
           -rss_limit_mb=4096 \

@@ -40,7 +40,7 @@ jobs:
 
       - name: Conventional-commit lint
         env:
-          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_BASE_REF: ${{ github.event.pull_request.base.ref }}
         run: |
-          scripts/ci/lint-commits.sh "$BASE_REF...$HEAD_SHA"
+          scripts/ci/lint-commits.sh "$PR_BASE_REF...$PR_HEAD_SHA"
