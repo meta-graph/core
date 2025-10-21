@@ -7,6 +7,8 @@ set -eu
 PROJECT_ROOT="$(CDPATH='' cd -- "$(dirname "$0")/.." && pwd)"
 . "$PROJECT_ROOT/scripts/mg.sh"
 
+readonly BUILD_DIR="${MG_BUILD_DIR:-$PROJECT_ROOT/build}"
+
 print_header() {
     echo "================================================"
     echo "🛡️  MetaGraph Security Audit Suite"
@@ -29,7 +31,7 @@ print_error() {
 analyze_binary_security() {
     print_status "🔒 Analyzing binary security features..."
 
-    binary="./build/bin/mg-cli"
+    binary="$BUILD_DIR/bin/mg-cli"
 
     if [ ! -f "$binary" ]; then
         print_error "Binary not found: $binary"
@@ -48,21 +50,44 @@ analyze_binary_security() {
     elif command -v objdump >/dev/null 2>&1; then
         echo "Security Features Check:" >> .ignored/security-audit.txt
 
-        # Check for stack canaries
+        has_stack_protection=false
+
+        # Check for traditional stack protector symbol
         if objdump -d "$binary" 2>/dev/null | grep -q "__stack_chk_fail"; then
-            echo "✅ Stack canaries: ENABLED" >> .ignored/security-audit.txt
+            has_stack_protection=true
         elif nm "$binary" 2>/dev/null | grep -q "__stack_chk_fail"; then
-            echo "✅ Stack canaries: ENABLED" >> .ignored/security-audit.txt
-        else
-            echo "❌ Stack canaries: DISABLED" >> .ignored/security-audit.txt
+            has_stack_protection=true
         fi
 
-        # Check for PIE
-        if file "$binary" | grep -q "shared object"; then
-            echo "✅ PIE (Position Independent Executable): ENABLED" >> .ignored/security-audit.txt
-        elif file "$binary" | grep -q "Mach-O.*executable.*PIE"; then
-            echo "✅ PIE (Position Independent Executable): ENABLED" >> .ignored/security-audit.txt
+        # Safe stack runtime symbol indicates hardened stack usage on Clang
+        if [ "$has_stack_protection" = false ] \
+            && nm -D "$binary" 2>/dev/null | grep -q "__safestack_unsafe_stack_ptr"; then
+            has_stack_protection=true
+        fi
+
+        if [ "$has_stack_protection" = true ]; then
+            echo "✅ Stack protection: ENABLED" >> .ignored/security-audit.txt
+        else
+            echo "❌ Stack protection: DISABLED" >> .ignored/security-audit.txt
+        fi
+
+        pie_output="$(file "$binary" 2>/dev/null || true)"
+        pie_enabled=false
+
+        if echo "$pie_output" | grep -qi "shared object"; then
+            pie_enabled=true
+        elif echo "$pie_output" | grep -qi "pie executable"; then
+            pie_enabled=true
+        elif echo "$pie_output" | grep -q "Mach-O.*executable.*PIE"; then
+            pie_enabled=true
         elif otool -hv "$binary" 2>/dev/null | grep -q "PIE"; then
+            pie_enabled=true
+        elif command -v readelf >/dev/null 2>&1 && \
+            readelf -h "$binary" 2>/dev/null | grep -q "Type:[[:space:]]*DYN"; then
+            pie_enabled=true
+        fi
+
+        if [ "$pie_enabled" = true ]; then
             echo "✅ PIE (Position Independent Executable): ENABLED" >> .ignored/security-audit.txt
         else
             echo "❌ PIE: DISABLED" >> .ignored/security-audit.txt
@@ -70,7 +95,7 @@ analyze_binary_security() {
     fi
 
     # Check for debugging symbols
-    if objdump -h "$binary" | grep -q "debug"; then
+    if objdump -h "$binary" 2>/dev/null | grep -q "debug"; then
         echo "⚠️  Debug symbols: PRESENT (should be stripped for release)" >> .ignored/security-audit.txt
     else
         echo "✅ Debug symbols: STRIPPED" >> .ignored/security-audit.txt
@@ -107,7 +132,7 @@ scan_source_code() {
     # Check for dangerous functions
     dangerous_functions="strcpy strcat sprintf gets scanf"
     for func in $dangerous_functions; do
-        if grep -r "$func" src/ include/ 2>/dev/null; then
+        if grep -R --include='*.c' --include='*.h' -n -E "\\b${func}\\b" src/ include/ 2>/dev/null; then
             echo "⚠️  Found potentially dangerous function: $func" >> .ignored/security-audit.txt
         fi
     done
@@ -127,7 +152,7 @@ scan_dependencies() {
     echo "=== Dependency Analysis ===" >> .ignored/security-audit.txt
 
     # List all linked libraries
-    binary="./build/bin/mg-cli"
+    binary="$BUILD_DIR/bin/mg-cli"
 
     if [ ! -f "$binary" ]; then
         echo "⚠️  Binary not found for dependency analysis" >> .ignored/security-audit.txt
@@ -155,10 +180,11 @@ analyze_memory_safety() {
     echo "=== Memory Safety Analysis ===" >> .ignored/security-audit.txt
 
     # Check if we have test binaries to run
-    if [ ! -f "build/bin/mg_unit_tests" ] && [ ! -f "build/bin/placeholder_test" ]; then
+    if [ ! -f "$BUILD_DIR/bin/mg_unit_tests" ] &&
+       [ ! -f "$BUILD_DIR/bin/placeholder_test" ]; then
         print_warning "No test binaries found - skipping memory safety analysis"
         echo "⚠️  No test binaries for memory safety analysis" >> .ignored/security-audit.txt
-        echo "    Build with 'cmake -B build && cmake --build build' first" >> .ignored/security-audit.txt
+        echo "    Build with 'cmake -B \"$BUILD_DIR\" && cmake --build \"$BUILD_DIR\"' first" >> .ignored/security-audit.txt
         return 0
     fi
 
@@ -167,17 +193,18 @@ analyze_memory_safety() {
         print_status "Building with AddressSanitizer..."
         
         # Build with address sanitizer
-        if cmake -B build-asan \
+        ASAN_BUILD_DIR="${BUILD_DIR}-asan"
+        if cmake -B "$ASAN_BUILD_DIR" \
             -DCMAKE_BUILD_TYPE=Debug \
             -DMETAGRAPH_SANITIZERS=ON \
             -DCMAKE_C_COMPILER=clang >/dev/null 2>&1; then
-            
-            if cmake --build build-asan --parallel >/dev/null 2>&1; then
+
+            if cmake --build "$ASAN_BUILD_DIR" --parallel >/dev/null 2>&1; then
                 # Run tests with ASAN
                 export ASAN_OPTIONS="abort_on_error=1:halt_on_error=1:print_stats=1"
-                
+
                 # Find and run any test binary
-                test_binary=$(find build-asan/bin -name '*test*' -type f 2>/dev/null | head -1)
+                test_binary=$(find "$ASAN_BUILD_DIR/bin" -name '*test*' -type f 2>/dev/null | head -1)
                 if [ -n "$test_binary" ] && [ -f "$test_binary" ]; then
                     if "$test_binary" >/dev/null 2>&1; then
                         echo "✅ AddressSanitizer: No memory safety issues detected" >> .ignored/security-audit.txt
@@ -304,13 +331,13 @@ main() {
     print_header
 
     # Ensure we have a build
-    if [ ! -d "build" ]; then
+    if [ ! -d "$BUILD_DIR" ]; then
         print_status "Building project for security analysis..."
-        cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=clang
-        cmake --build build --parallel
-    elif [ ! -f "build/bin/mg-cli" ]; then
+        cmake -B "$BUILD_DIR" -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=clang
+        cmake --build "$BUILD_DIR" --parallel
+    elif [ ! -f "$BUILD_DIR/bin/mg-cli" ]; then
         print_status "Building missing binaries for security analysis..."
-        cmake --build build --parallel
+        cmake --build "$BUILD_DIR" --parallel
     fi
 
     # Run all security checks
@@ -331,6 +358,9 @@ main() {
     # Check if any critical issues were found
     if grep -q "❌\|CRITICAL" .ignored/security-audit.txt; then
         print_error "Critical security issues found! Review .ignored/security-audit.txt"
+        echo "----- BEGIN security-audit.txt -----"
+        cat .ignored/security-audit.txt
+        echo "------ END security-audit.txt ------"
         exit 1
     else
         print_status "✅ No critical security issues detected"

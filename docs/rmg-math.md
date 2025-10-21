@@ -8,11 +8,13 @@
 
 Fix a universe of payloads $P$ (raw blobs, metadata, etc.).  Define the class $\mathrm{RMG}$ of **recursive meta-graphs** to be the **least** class closed under the following constructors:
 
-1. **Atoms.** For any $p \in P$, the object $\operatorname{Atom}(p)$ belongs to $\mathrm{RMG}$.
+1. **Atoms.** For any $p \in P$, the object $Atom(p)$ belongs to $\mathrm{RMG}$.
 2. **Graphs.** Let $S = (V, E, s, t)$ be a finite directed multigraph (“1-skeleton”), and let
-   \[
+```math
+   [
        \alpha : V \to \mathrm{RMG}, \qquad \beta : E \to \mathrm{RMG}
-   \]
+   ]
+```
    assign a meta-graph to each vertex and edge respectively.  The triple $(S, \alpha, \beta)$ is an element of $\mathrm{RMG}$.
 
 Minimality ensures well-foundedness: every RMG is built by finitely many applications of these constructors, bottoming out at atoms.  In practice, atoms correspond to graph chunks whose `node_count = edge_count = 0` with payload stored in the bundle’s blob region.
@@ -22,18 +24,22 @@ Minimality ensures well-foundedness: every RMG is built by finitely many applica
 ## 2. Initial-Algebra View
 
 Let $\mathcal{G}$ denote the set of shapes $S = (V,E,s,t)$. Consider the polynomial endofunctor on $\mathbf{Set}$
-\[
+```math
+[
 F(X) = \coprod_{S \in \mathcal{G}} \bigl( (V \to X) \times (E \to X) \bigr) \; + \; P .
-\]
+]
+```
 An RMG is an element of the **initial algebra** $\mu F$.  This formulation yields:
 
-- **Structural recursion (catamorphisms).** For any $F$-algebra $\varphi : F(X) \to X$, there exists a unique homomorphism $\operatorname{fold}_\varphi : \mathrm{RMG} \to X$ defined by
-  \[
+- **Structural recursion (catamorphisms).** For any $F$-algebra $\varphi : F(X) \to X$, there exists a unique homomorphism $fold_\varphi : \mathrm{RMG} \to X$ defined by
+```math
+  [
   \begin{aligned}
-    \operatorname{fold}_\varphi(\operatorname{Atom}(p)) &= \varphi(\operatorname{inr}(p)), \\
-    \operatorname{fold}_\varphi(S,\alpha,\beta) &= \varphi \bigl( \operatorname{inl}(S, \operatorname{fold}_\varphi \circ \alpha, \operatorname{fold}_\varphi \circ \beta) \bigr) .
+    fold_\varphi(Atom(p)) &= \varphi(inr(p)), \\
+    fold_\varphi(S,\alpha,\beta) &= \varphi \bigl( inl(S, fold_\varphi \circ \alpha, fold_\varphi \circ \beta) \bigr) .
   \end{aligned}
-  \]
+  ]
+```
   This is the semantic foundation for `metagraph_fold(...)` style APIs.
 - **Induction principle.** Properties $\mathcal{P}$ on $\mathrm{RMG}$ can be shown by checking $\mathcal{P}$ on atoms and assuming it holds for each attachment when proving it for $(S,\alpha,\beta)$.
 - **Coinduction (optional).** Replacing $\mu F$ by the greatest fixed point $\nu F$ admits possibly infinite unfoldings, useful for live streaming or netlists with recursion.
@@ -53,11 +59,11 @@ With identity and composition defined pointwise, $\mathrm{RMG}$ becomes a catego
 
 ## 4. Recursion Schemes and Unfoldings
 
-- **Depth.** $\operatorname{depth}(\operatorname{Atom}(p)) = 0$, and
-  \[
-    \operatorname{depth}(S,\alpha,\beta) = 1 + \max \Bigl\{ \max_{v \in V} \operatorname{depth}(\alpha(v)), \max_{e \in E} \operatorname{depth}(\beta(e)) \Bigr\} .
-  \]
-- **$k$-unfolding.** Define $\llbracket G \rrbracket_k$ by recursively replacing attachments up to depth $k$ with their 1-skeletons.  The filtered colimit $\varinjlim_k \llbracket G \rrbracket_k$ is the infinite unfolding used for analysis or visualization.
+- **Depth.** $depth(Atom(p)) = 0$, and
+```math
+    [depth(S,\alpha,\beta) = 1 + \max \Bigl\{ \max_{v \in V} depth(\alpha(v)), \max_{e \in E} depth(\beta(e)) \Bigr\}].
+```
+- **$k$-unfolding.** Define $[ G ]_k$ by recursively replacing attachments up to depth $k$ with their 1-skeletons.  The filtered colimit $\varinjlim_k [ G ]_k$ is the infinite unfolding used for analysis or visualization.
 - **Hylomorphisms / paramorphisms.** Standard recursion schemes (build-then-fold, folds with access to subterms) are inherited from the initial algebra semantics.
 
 ---
@@ -82,7 +88,7 @@ Because each attachment is itself an RMG, rewrites recurse automatically: replac
 | Vertex attachment $\alpha(v)$ | Entry in node index referencing another graph chunk | `mg_graph_hydrate_node(...)` follows offset into mapped region |
 | Edge attachment $\beta(e)$ | `edge_data_idx` (graph chunk containing semantics/pipeline) | `mg_graph_hydrate_edge(...)` pulls edge-graph lazily |
 | Atom | `node_count = edge_count = 0`, payload stored as blob/string | Treated as leaf: hydration returns zero-degree graph |
-| Fold $\operatorname{fold}_\varphi$ | `metagraph_fold(...)` style API | Provided callback `\varphi` is invoked once per chunk |
+| Fold $fold_\varphi$ | `metagraph_fold(...)` style API | Provided callback $`\varphi`$ is invoked once per chunk |
 | Pushout splice | In-place pointer rewrite + integrity update | Implements DPO rewrite guaranteeing consistency |
 
 This table ensures that the theoretical constructors map one-to-one to concrete chunk types and loader operations.  No “extra” structures appear in code that lack a slot in the mathematics, and vice versa.

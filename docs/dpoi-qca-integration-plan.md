@@ -10,7 +10,7 @@ This document tracks how we will merge the `rmg-c-rmg-skeleton-xtra` drop into `
 ## Guiding Constraints
 
 1. **Lint first, lint last** – every stage runs `clang-tidy -p build` under the repo’s root `.clang-tidy`. No `NOLINT` exceptions permitted.
-2. **Keep functions lean** – target ≤ 50 lines and ≤ 25 statements per helper before landing patches (STR_GOD_TIER soft cap is 80 lines, but we will stay well under to avoid churn).
+2. **Keep functions lean** – target ≤ 50 lines and ≤ 25 statements per helper before landing patches (clang-tidy enforces LineThreshold=50; staying well under avoids churn).
 3. **Epoch discipline** – attachment epoch flips immediately after attachment journal publish; skeleton epoch flips only after CSR publish.
 4. **Journal → verify → publish** – every pushout goes through diff capture, invariant check (debug mode), then epoch flip.
 
@@ -35,7 +35,7 @@ Deliverable: clean tree + green lint baseline.
 Tasks:
 - [ ] Copy `mg_iface_sig_t`, `mg_edge_ifc_t`, and port direction enums into `include/metagraph/rmg.h` (renamed to fit project naming).
 - [ ] Extend `mg_rule_t` with node-port caps and edge interface signatures, keeping constructor helpers updated.
-- [ ] Add attachment update structs (`metagraph_att_update_t`) and dual epoch counters (`mg_epoch_t` for skeleton, new `mg_attachment_epoch_t`).
+- [ ] Add attachment update structs (`mg_att_update_t`) and dual epoch counters (`mg_epoch_t` for skeleton, new `mg_attachment_epoch_t`).
 - [ ] Ensure each addition compiles + lint passes (update unit tests for struct initialization).
 
 Deliverable: type definitions available to the rest of the repo, no functional changes yet.
@@ -67,7 +67,7 @@ Deliverable: deterministic, lint-clean matcher with halo/touched sets and port g
 
 Tasks:
 - [ ] Introduce adjacency workspace + diff lists (`added_nodes`, `added_edges`, `removed_edges`).
-- [ ] Capture attachment updates in `metagraph_att_update_t` list (old/new offsets & flags).
+- [ ] Capture attachment updates in `mg_att_update_t` list (old/new offsets & flags).
 - [ ] Implement rollback by discarding workspace + restoring attachments when a commit fails (no partial state).
 - [ ] Integrate debug-only invariants (`MG_DEBUG`) for symmetry, port preservation, and orphan detection.
 - [ ] Add instrumentation outputs (journal stats, epochs) to the CLI.

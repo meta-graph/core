@@ -11,7 +11,7 @@
 Land the `rmg-c-rmg-skeleton-xtra` drop (typed ports, seeded VF2 matcher, attachment pushouts, diff-based rollback) into `meta-graph/core`, ensuring every phase passes the root `.clang-tidy` (`STRICTNESS_GOD_TIER_BRUTAL_NO_MERCY`) before and after changes.
 
 Plan lives in `docs/dpoi-qca-integration-plan.md`.  
-Immediate workflow loop: **tidy clang → integrate → tidy clang**.
+Immediate workflow loop: **tidy → integrate → tidy**.
 
 ---
 
@@ -36,7 +36,7 @@ Immediate workflow loop: **tidy clang → integrate → tidy clang**.
    - Run build, tests, and `clang-tidy -p build` (Release + MG_DEBUG).
    - File PR; include before/after epoch + journal telemetry.
 
-Each phase ends with the tidy→integrate→tidy cadence.
+Each phase ends with the tidy → integrate → tidy cadence.
 
 ---
 

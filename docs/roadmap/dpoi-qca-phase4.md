@@ -15,9 +15,10 @@ Wire the QCA tick loop to the upgraded matcher and commit engine, ensuring deter
 ## Tasks
 
 - [ ] Refactor tick loop to reuse arena-allocated match buffers and diff lists.  
-- [ ] Ensure kernel application order follows deterministic key ordering.  
-- [ ] Update metrics (matches found/kept, conflicts dropped, journal stats, timings, epochs).  
-- [ ] Integrate CLI output for journal and epoch telemetry.  
+- [ ] Ensure kernel application order follows deterministic key ordering (key_hi/key_lo, then insertion order).  
+- [ ] Feed a deterministic RNG seed into tick (CLI/API) and propagate it through scheduling.  
+- [ ] Update metrics (matches found/kept, conflicts dropped, journal stats, timings, attachment/skeleton epochs) and document JSON schema.  
+- [ ] Integrate CLI output for journal and epoch telemetry (JSON lines with timestamp + seed).  
 - [ ] Add integration tests (`t1`, `t2`) covering deterministic MIS + halo behaviour under the new pipeline.  
 - [ ] Tidy → integrate → tidy (`clang-tidy -p build`).
 
@@ -26,7 +27,8 @@ Wire the QCA tick loop to the upgraded matcher and commit engine, ensuring deter
 ## Acceptance Criteria
 
 - [ ] QCA tick produces identical results across runs (given same seed).  
-- [ ] Metrics/telemetry reflect new data (journal counts, attachment/skeleton epochs).  
+- [ ] Metrics/telemetry reflect new data (journal counts, attachment/skeleton epochs, RNG seed) with schema documented.  
+- [ ] MG_DEBUG invariants list (halo preservation, epoch ordering) is documented and passes in CI.  
 - [ ] Integration tests pass in Release and MG_DEBUG modes.  
 - [ ] Tracker updated for Phase 4.
 

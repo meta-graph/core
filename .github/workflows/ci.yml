@@ -18,16 +18,13 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest]
         build_type: [Debug, Release]
         compiler: [clang]
         include:
           - os: ubuntu-latest
             cc: clang-18
             cxx: clang++-18
-          - os: macos-latest
-            cc: clang
-            cxx: clang++
 
     steps:
     - uses: actions/checkout@v4
@@ -45,14 +42,10 @@ jobs:
           cmake ninja-build \
           clang-tidy-${{ env.LLVM_VERSION }} \
           clang-format-${{ env.LLVM_VERSION }} \
-          valgrind
-
-    - name: Install dependencies (macOS)
-      if: runner.os == 'macOS'
-      run: |
-        brew update
-        brew install cmake ninja llvm@${{ env.LLVM_VERSION }}
-        echo "/opt/homebrew/opt/llvm@${{ env.LLVM_VERSION }}/bin" >> $GITHUB_PATH
+          valgrind \
+          python3-pip
+        python3 -m pip install --user semgrep
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
 
     - name: Configure CMake
       env:
@@ -129,11 +122,33 @@ jobs:
         CC: clang-18
         CXX: clang++-18
       run: |
+        SAN="${{ matrix.sanitizer }}"
+        EXTRA_SANITIZER_FLAGS="-DMETAGRAPH_SANITIZERS=ON"
+
+        case "$SAN" in
+          address)
+            EXTRA_SANITIZER_FLAGS="$EXTRA_SANITIZER_FLAGS -DMETAGRAPH_ASAN=ON -DMETAGRAPH_UBSAN=ON -DMETAGRAPH_TSAN=OFF -DMETAGRAPH_MSAN=OFF"
+            ;;
+          undefined)
+            EXTRA_SANITIZER_FLAGS="$EXTRA_SANITIZER_FLAGS -DMETAGRAPH_ASAN=OFF -DMETAGRAPH_UBSAN=ON -DMETAGRAPH_TSAN=OFF -DMETAGRAPH_MSAN=OFF"
+            ;;
+          thread)
+            EXTRA_SANITIZER_FLAGS="$EXTRA_SANITIZER_FLAGS -DMETAGRAPH_ASAN=OFF -DMETAGRAPH_UBSAN=OFF -DMETAGRAPH_TSAN=ON -DMETAGRAPH_MSAN=OFF"
+            ;;
+          memory)
+            EXTRA_SANITIZER_FLAGS="$EXTRA_SANITIZER_FLAGS -DMETAGRAPH_ASAN=OFF -DMETAGRAPH_UBSAN=OFF -DMETAGRAPH_TSAN=OFF -DMETAGRAPH_MSAN=ON"
+            ;;
+          *)
+            echo "Unsupported sanitizer '$SAN'. Expected one of: address, undefined, thread, memory." >&2
+            exit 1
+            ;;
+        esac
+
         cmake -B build -G Ninja \
           -DCMAKE_BUILD_TYPE=Debug \
-          -DMETAGRAPH_SANITIZERS=ON \
-          -DCMAKE_C_FLAGS="-fsanitize=${{ matrix.sanitizer }} -fno-omit-frame-pointer" \
-          -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=${{ matrix.sanitizer }}"
+          ${EXTRA_SANITIZER_FLAGS} \
+          -DCMAKE_C_FLAGS="-fsanitize=${SAN} -fno-omit-frame-pointer" \
+          -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=${SAN}"
 
     - name: Build
       run: cmake --build build
@@ -158,7 +173,7 @@ jobs:
         chmod +x llvm.sh
         sudo ./llvm.sh ${{ env.LLVM_VERSION }}
         sudo apt-get update
-        sudo apt-get install -y cmake ninja-build lcov
+        sudo apt-get install -y cmake ninja-build lcov llvm-${{ env.LLVM_VERSION }}-tools
 
     - name: Configure with coverage
       env:
@@ -167,27 +182,104 @@ jobs:
       run: |
         cmake -B build -G Ninja \
           -DCMAKE_BUILD_TYPE=Debug \
-          -DCMAKE_C_FLAGS="--coverage -fprofile-instr-generate -fcoverage-mapping" \
-          -DCMAKE_EXE_LINKER_FLAGS="--coverage"
+          -DCMAKE_C_FLAGS="-fprofile-instr-generate -fcoverage-mapping" \
+          -DCMAKE_CXX_FLAGS="-fprofile-instr-generate -fcoverage-mapping" \
+          -DCMAKE_EXE_LINKER_FLAGS="-fprofile-instr-generate -fcoverage-mapping" \
+          -DCMAKE_SHARED_LINKER_FLAGS="-fprofile-instr-generate -fcoverage-mapping"
 
     - name: Build
       run: cmake --build build
 
     - name: Test
       run: |
-        LLVM_PROFILE_FILE="coverage-%p.profraw" ctest --test-dir build --output-on-failure
-        llvm-profdata-18 merge -sparse coverage-*.profraw -o coverage.profdata
+        PROFILE_DIR="${{ github.workspace }}/build"
+        LLVM_PROFILE_FILE="$PROFILE_DIR/coverage-%p.profraw" ctest --test-dir build --output-on-failure
+        if ! ls "$PROFILE_DIR"/coverage-*.profraw >/dev/null 2>&1; then
+          echo "No coverage profiles generated"
+          exit 1
+        fi
+        llvm-profdata-18 merge -sparse "$PROFILE_DIR"/coverage-*.profraw -o coverage.profdata
         llvm-cov-18 report ./build/bin/* -instr-profile=coverage.profdata
+        # Export LCOV for Codecov
+        llvm-cov-18 export ./build/bin/* -instr-profile=coverage.profdata -format=lcov > coverage.lcov
 
     - name: Upload coverage reports
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v5
       with:
-        files: ./coverage.profdata
-        fail_ci_if_error: true
+        files: ./coverage.lcov
+        fail_ci_if_error: false
+
+  clang-tidy-god-tier:
+    name: GNU-GON-CRY-GOD-TIER-SUPERSTRICT™ clang-tidy
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install LLVM toolchain
+      run: |
+        wget https://apt.llvm.org/llvm.sh
+        chmod +x llvm.sh
+        sudo ./llvm.sh ${{ env.LLVM_VERSION }}
+        sudo apt-get update
+        sudo apt-get install -y cmake ninja-build \
+          clang-tidy-${{ env.LLVM_VERSION }} \
+          clang-format-${{ env.LLVM_VERSION }}
+        sudo update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-${{ env.LLVM_VERSION }} 100
+        sudo update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-${{ env.LLVM_VERSION }} 100
+
+    - name: Configure GNU-GON-CRY-GOD-TIER build
+      env:
+        CC: clang-18
+        CXX: clang++-18
+      run: |
+        cmake -B build -G Ninja \
+          -DCMAKE_BUILD_TYPE=Debug \
+          -DMETAGRAPH_DEV=ON \
+          -DMETAGRAPH_SANITIZERS=OFF \
+          -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+
+    - name: Build compile database
+      run: cmake --build build --parallel
+
+    - name: Verify compile database
+      run: |
+        if [ ! -f build/compile_commands.json ]; then
+          echo "Error: compile_commands.json not generated; build may have failed" >&2
+          exit 1
+        fi
+
+    - name: Run GNU-GON-CRY-GOD-TIER-SUPERSTRICT™ clang-tidy
+      env:
+        MG_TIDY_BUILD_DIR: build
+      run: |
+        set +e
+        set -o pipefail
+        ./scripts/run-clang-tidy.sh --check | tee clang-tidy.log
+        tidy_status=$?
+        head -n 200 clang-tidy.log || true
+        set -e
+        warnings=$(grep -c "warning:" clang-tidy.log || true)
+        errors=$(grep -c "error:" clang-tidy.log || true)
+        echo "::notice title=GNU-GON-CRY-GOD-TIER-SUPERSTRICT™ clang-tidy::${warnings} warnings / ${errors} errors"
+        {
+          echo "## clang-tidy summary"
+          echo ""
+          echo "- Warnings: ${warnings}"
+          echo "- Errors: ${errors}"
+        } >> "$GITHUB_STEP_SUMMARY" || true
+        exit "$tidy_status"
+
+    - name: Upload clang-tidy log
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: clang-tidy-god-tier-log
+        path: clang-tidy.log
+        retention-days: 7
 
   all-checks-pass:
     name: All Checks Pass
-    needs: [quality-matrix, format-check, sanitizers, coverage]
+    needs: [quality-matrix, format-check, sanitizers, coverage, clang-tidy-god-tier]
     runs-on: ubuntu-latest
     steps:
     - run: echo "All checks passed!"

@@ -1,0 +1,17 @@
+version: "3.9"
+
+services:
+  matrix:
+    build:
+      context: ../..
+      dockerfile: docker/matrix/Dockerfile
+      args:
+        LLVM_VERSION: "18"
+    image: metagraph/matrix:clang18
+    working_dir: /workspace
+    volumes:
+      - ../..:/workspace
+    platform: linux/amd64
+    security_opt:
+      - no-new-privileges:true
+    read_only: true

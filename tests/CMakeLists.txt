@@ -16,6 +16,7 @@ set_tests_properties(placeholder_test PROPERTIES
 
 add_executable(dpoi_qca_rmg_test dpoi_qca_rmg_test.c)
 target_link_libraries(dpoi_qca_rmg_test metagraph::metagraph)
+target_compile_options(dpoi_qca_rmg_test PRIVATE $<$<CONFIG:Release>:-UNDEBUG>)
 
 add_test(NAME dpoi_qca_rmg_test COMMAND dpoi_qca_rmg_test)
 set_tests_properties(dpoi_qca_rmg_test PROPERTIES

@@ -17,9 +17,9 @@ Implement attachment-aware DPO commits: diff journaling for nodes/edges/attachme
 - [ ] Introduce adjacency workspace with diff lists (added nodes/edges, removed edges).  
 - [ ] Capture attachment offset/flag updates in a journal structure.  
 - [ ] Apply journal → verify invariants → publish attachments → flip attachment epoch → publish CSR → flip skeleton epoch.  
-- [ ] Provide rollback path that discards workspace/journal on failure.  
-- [ ] Add MG_DEBUG invariants (symmetry, no orphans, preserved port compliance).  
-- [ ] Update telemetry to include journal stats and both epochs.  
+- [ ] Provide rollback that discards workspace/journal when a commit fails, restoring attachments and skeleton tables atomically for the whole scheduled batch.  
+- [ ] Add MG_DEBUG invariants (symmetry, no orphans, preserved port compliance) and document their O(n) cost.  
+- [ ] Update telemetry to include journal stats and both epochs (attachment epoch -> `epoch_att`, skeleton epoch -> `epoch_skel`).  
 - [ ] Tidy → integrate → tidy (clang-tidy passes).
 
 ---
@@ -27,8 +27,8 @@ Implement attachment-aware DPO commits: diff journaling for nodes/edges/attachme
 ## Acceptance Criteria
 
 - [ ] Attachment updates behave atomically; rollback restores original state.  
-- [ ] Epoch counters reflect attachment/skeleton publishes.  
-- [ ] Debug invariants pass in MG_DEBUG builds.  
+- [ ] Epoch counters `epoch_att` (attachments) and `epoch_skel` (skeleton) flip in the documented order (attachments first).  
+- [ ] Debug invariants pass in MG_DEBUG builds and are referenced in documentation.  
 - [ ] `clang-tidy -p build` clean.  
 - [ ] Phase 3 checked off in tracker.
 

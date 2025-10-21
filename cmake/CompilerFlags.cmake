@@ -38,10 +38,13 @@ set(METAGRAPH_WARNING_FLAGS
 
 # Security hardening flags (platform-specific)
 set(METAGRAPH_SECURITY_FLAGS
+    -U_FORTIFY_SOURCE
     -D_FORTIFY_SOURCE=3
-    -fstack-protector-strong
+    -fstack-protector-all
     -fPIE
 )
+
+set(METAGRAPH_SECURITY_LINK_FLAGS)
 
 # Platform-specific security flags
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
@@ -71,41 +74,38 @@ if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
         -Wvector-operation-performance
     )
 elseif(CMAKE_C_COMPILER_ID MATCHES "Clang")
+    list(REMOVE_ITEM METAGRAPH_WARNING_FLAGS
+        -Wcast-align=strict
+        -Wformat-overflow=2
+        -Wformat-signedness
+        -Wformat-truncation=2
+        -Wimplicit-fallthrough=5
+    )
+    list(APPEND METAGRAPH_WARNING_FLAGS
+        -Wcast-align
+        -Wimplicit-fallthrough
+    )
     list(APPEND METAGRAPH_WARNING_FLAGS
         -Wthread-safety
         -Wthread-safety-beta
     )
 
-    # Filter out Apple Clang unsupported warnings
-    if(CMAKE_C_COMPILER_ID STREQUAL "AppleClang" OR
-      (CMAKE_C_COMPILER_ID STREQUAL "Clang" AND CMAKE_SYSTEM_NAME STREQUAL "Darwin"))
-        # Apple Clang doesn't support some warnings that regular Clang does
-        list(REMOVE_ITEM METAGRAPH_WARNING_FLAGS
-            -Wcast-align=strict
-            -Wformat-overflow=2
-            -Wformat-truncation=2
-            -Wimplicit-fallthrough=5
-        )
-        # Add simpler versions that Apple Clang supports
-        list(APPEND METAGRAPH_WARNING_FLAGS
-            -Wcast-align
-            -Wimplicit-fallthrough
-        )
-    endif()
-
-    # Clang-specific sanitizers
+    # Clang-specific hardening
     if(METAGRAPH_SANITIZERS)
-        # safe-stack is not supported on all platforms
-        if(NOT CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-            list(APPEND METAGRAPH_SECURITY_FLAGS
-                -fsanitize=safe-stack
-            )
-        endif()
-
         # CFI requires LTO
         if(CMAKE_INTERPROCEDURAL_OPTIMIZATION)
             list(APPEND METAGRAPH_SECURITY_FLAGS
                 -fsanitize=cfi
+            )
+        endif()
+    else()
+        # safe-stack is not supported on all platforms and conflicts with ASAN
+        if(NOT CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+            list(APPEND METAGRAPH_SECURITY_FLAGS
+                -fsanitize=safe-stack
+            )
+            list(APPEND METAGRAPH_SECURITY_LINK_FLAGS
+                -fsanitize=safe-stack
             )
         endif()
     endif()
@@ -129,6 +129,10 @@ endif()
 # Apply warning flags to all targets
 add_compile_options(${METAGRAPH_WARNING_FLAGS})
 add_compile_options(${METAGRAPH_SECURITY_FLAGS})
+
+if(METAGRAPH_SECURITY_LINK_FLAGS)
+    add_link_options(${METAGRAPH_SECURITY_LINK_FLAGS})
+endif()
 
 # Enable PIE for all builds (not just release)
 if(NOT CMAKE_C_COMPILER_ID STREQUAL "MSVC")

@@ -24,7 +24,8 @@ typedef struct {
 typedef struct {
     mg_node_rec_t *nodes;
     size_t node_count;
-    uint32_t *nbr_ids;
+    uint32_t
+        *nbr_ids; /* CSR neighbour list storing node indices into nodes[] */
     size_t nbr_count;
     mg_edge_rec_t *edges;
     size_t edge_count;

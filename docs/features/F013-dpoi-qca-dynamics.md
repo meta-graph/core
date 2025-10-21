@@ -107,14 +107,19 @@ typedef struct {
 
 typedef struct {
   const mg_node_rec_t* nodes;
+  const uint32_t*      nbr_ids;   // CSR neighbour indices into nodes[]
+  size_t               node_count;
+  size_t               nbr_count;
   const mg_edge_rec_t* edges;
-  const uint64_t*      nbr_offset;  // size node_count + 1
-  const uint32_t*      nbr_ids;     // CSR neighbor list
-  uint64_t             node_count;
-  uint64_t             edge_count;
+  size_t               edge_count;
   uint64_t             epoch;
-  void*                internal;    // hydration cache, arenas, etc.
 } mg_graph_snapshot_t;
+
+enum {
+  MG_RULE_MAX_NODES = 16,
+  MG_RULE_MAX_EDGES = 24,
+  MG_MATCH_MAX_TOUCHED_NODES = 128,
+};
 
 typedef struct {
   // Compact pattern graphs (<=16 nodes / <=24 edges)
@@ -142,17 +147,13 @@ typedef struct {
 } mg_rule_t;
 
 typedef struct {
-  uint32_t rule_id;
-  uint64_t key_hi;
-  uint64_t key_lo;
-  uint8_t  L_node_count;
-  uint8_t  L_edge_count;
-  mg_node_id_t L_to_G_node[16];
-  mg_edge_id_t L_to_G_edge[24];
-  uint16_t touched_node_count;
-  uint16_t touched_edge_count;
-  mg_node_id_t touched_nodes[64];
-  mg_edge_id_t touched_edges[64];
+  uint32_t     rule_id;
+  uint8_t      L_n;
+  mg_node_id_t L2G_node[MG_RULE_MAX_NODES];
+  uint16_t     tn;
+  mg_node_id_t touched_nodes[MG_MATCH_MAX_TOUCHED_NODES];
+  uint64_t     key_hi;
+  uint64_t     key_lo;
 } mg_match_t;
 
 typedef struct {
