@@ -4,8 +4,6 @@
  */
 
 #include "metagraph/version.h"
-#include <errno.h>
-#include <stdarg.h>
 #include <stdio.h>
 
 void metagraph_print_api_version(void);

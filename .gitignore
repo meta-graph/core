@@ -38,6 +38,7 @@ DerivedData/
 # Build directories
 build/
 build-*/
+build-asan/
 compile_commands.json
 dist/
 bin/
@@ -91,6 +92,9 @@ missing
 /core
 *.core
 vgcore.*
+
+# Node.js tooling
+node_modules/
 
 # Performance baseline (machine-dependent, not tracked)
 performance-baseline.txt

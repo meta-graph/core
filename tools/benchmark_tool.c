@@ -5,9 +5,7 @@
 
 #include "metagraph/result.h"
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include <time.h>
 
 // Performance targets from documentation
 #define METAGRAPH_TARGET_NODE_LOOKUP_NS 100         // <100ns

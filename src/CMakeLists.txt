@@ -5,6 +5,14 @@
 set(METAGRAPH_SOURCES
     version.c
     error.c
+    arena.c
+    graph.c
+    rmg.c
+    match.c
+    rule.c
+    hilbert.c
+    dpoi.c
+    qca.c
 )
 
 # Create the core library with modern CMake patterns

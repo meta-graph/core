@@ -4,8 +4,39 @@
  */
 
 #include "metagraph/version.h"
-#include <stdio.h>
+#include "metagraph/base.h"
 #include <string.h>
+
+static size_t metagraph_append_span(char *buffer, size_t capacity,
+                                    size_t offset, const char *data,
+                                    size_t length) {
+    if (!buffer || capacity == 0U || !data || length == 0U) {
+        return offset;
+    }
+    size_t index = 0U;
+    while (index < length && offset + 1U < capacity) {
+        buffer[offset++] = data[index++];
+    }
+    if (offset < capacity) {
+        buffer[offset] = '\0';
+    } else {
+        buffer[capacity - 1U] = '\0';
+        offset = capacity - 1U;
+    }
+    return offset;
+}
+
+static size_t metagraph_append_cstring(char *buffer, size_t capacity,
+                                       size_t offset, const char *text) {
+    if (!text) {
+        return offset;
+    }
+    size_t length = 0U;
+    while (text[length] != '\0') {
+        ++length;
+    }
+    return metagraph_append_span(buffer, capacity, offset, text, length);
+}
 
 int metagraph_version_major(void) { return METAGRAPH_API_VERSION_MAJOR; }
 
@@ -27,9 +58,22 @@ const char *metagraph_bundle_format_uuid(void) {
 
 const char *metagraph_build_info(void) {
     static char build_info[256];
-    snprintf(build_info, sizeof(build_info), "Built on %s from %s (%s)",
-             METAGRAPH_BUILD_TIMESTAMP, METAGRAPH_BUILD_COMMIT_HASH,
-             METAGRAPH_BUILD_BRANCH);
+    mg_zero_buffer(build_info, sizeof(build_info));
+    size_t offset = 0U;
+    offset = metagraph_append_span(build_info, sizeof(build_info), offset,
+                                   "Built on ", sizeof("Built on ") - 1U);
+    offset = metagraph_append_cstring(build_info, sizeof(build_info), offset,
+                                      METAGRAPH_BUILD_TIMESTAMP);
+    offset = metagraph_append_span(build_info, sizeof(build_info), offset,
+                                   " from ", sizeof(" from ") - 1U);
+    offset = metagraph_append_cstring(build_info, sizeof(build_info), offset,
+                                      METAGRAPH_BUILD_COMMIT_HASH);
+    offset = metagraph_append_span(build_info, sizeof(build_info), offset, " (",
+                                   sizeof(" (") - 1U);
+    offset = metagraph_append_cstring(build_info, sizeof(build_info), offset,
+                                      METAGRAPH_BUILD_BRANCH);
+    (void)metagraph_append_span(build_info, sizeof(build_info), offset, ")",
+                                sizeof(")") - 1U);
     return build_info;
 }
 

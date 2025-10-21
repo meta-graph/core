@@ -21,16 +21,25 @@ jobs:
         with: { fetch-depth: 0 }
 
       - name: Branch naming & target rules
+        env:
+          PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          PR_BASE_REF: ${{ github.event.pull_request.base.ref }}
         run: |
           scripts/ci/guard-branch.sh \
-            "${{ github.event.pull_request.head.ref }}" \
-            "${{ github.event.pull_request.base.ref }}"
+            "$PR_HEAD_REF" \
+            "$PR_BASE_REF"
 
       - name: Version downgrade guard
+        env:
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_BASE_REF: ${{ github.event.pull_request.base.ref }}
         run: |
           scripts/ci/guard-version.sh \
-            "${{ github.event.pull_request.head.sha }}" \
-            "${{ github.event.pull_request.base.ref }}"
+            "$PR_HEAD_SHA" \
+            "$PR_BASE_REF"
+
+      - name: Install commitlint tooling
+        run: npm ci
 
       - name: Conventional-commit lint
         env:
