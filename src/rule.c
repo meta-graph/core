@@ -4,6 +4,15 @@
 #include <limits.h>
 #include <stdint.h>
 
+/**
+ * Initialize the default port capacity bounds for the left-hand pattern nodes.
+ *
+ * Sets the max inbound and outbound port counts to UINT16_MAX for every
+ * potential node slot in the rule. Call this helper after zeroing the rule
+ * structure to enforce the default caps before wiring up node data.
+ *
+ * @param rule Rule object to initialize.
+ */
 static void mg_rule_init_port_caps(mg_rule_t *rule) {
     for (uint32_t i = 0; i < MG_RULE_MAX_NODES; ++i) {
         rule->L_port_caps[i].max_in = UINT16_MAX;
