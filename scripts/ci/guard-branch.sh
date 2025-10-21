@@ -9,6 +9,10 @@ DST="$2"   # base ref
 die() { echo "::error::$*"; exit 1; }
 
 case "$SRC" in
+  coderabbitai/*)
+    [[ "$DST" == "main" ]] \
+      || die "coderabbitai/* branches must target main."
+    ;;
   feat/minimal-dpoi-qca-loop)
     # Temporary allowance while PR #70 lands Phase 1 directly onto main.
     [[ "$DST" == "main" ]] \
@@ -31,6 +35,6 @@ case "$SRC" in
 esac
 
 if [[ "$DST" == "main" && ! "$SRC" =~ ^(release|fix)/ ]]; then
-  [[ "$SRC" == "feat/minimal-dpoi-qca-loop" ]] \
-    || die "Only release/* or fix/* may target main."
+  [[ "$SRC" == "feat/minimal-dpoi-qca-loop" || "$SRC" =~ ^coderabbitai/ ]] \
+    || die "Only release/*, fix/*, coderabbitai/*, or feat/minimal-dpoi-qca-loop may target main."
 fi
