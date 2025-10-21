@@ -4,6 +4,15 @@
 #include <limits.h>
 #include <stdint.h>
 
+/**
+ * Initialize the default port capacity bounds for the left-hand pattern nodes.
+ *
+ * Sets the max inbound and outbound port counts to UINT16_MAX for every
+ * potential node slot in the rule. Call this helper after zeroing the rule
+ * structure to enforce the default caps before wiring up node data.
+ *
+ * @param rule Rule object to initialize.
+ */
 static void mg_rule_init_port_caps(mg_rule_t *rule) {
     for (uint32_t i = 0; i < MG_RULE_MAX_NODES; ++i) {
         rule->L_port_caps[i].max_in = UINT16_MAX;
@@ -11,6 +20,17 @@ static void mg_rule_init_port_caps(mg_rule_t *rule) {
     }
 }
 
+/**
+ * Initialize a rule that applies a single-qubit X kernel.
+ *
+ * Configure `rule` as a one-node L graph (type MG_TYPE_Q) with R identical to
+ * L; set K_node_mask to 0x1, K_edge_mask to 0, K2L_node/K2R_node mapping for
+ * the node to 0, kernel to MG_KERNEL_X with kernel_radius 0, L_boundary_mask to
+ * 0, and assign the provided rule_id.
+ *
+ * @param rule Pointer to the mg_rule_t to initialize.
+ * @param rule_id Identifier to assign to the initialized rule.
+ */
 void mg_rule_make_apply_x(mg_rule_t *rule, uint32_t rule_id) {
     mg_zero_buffer(rule, sizeof(*rule));
     mg_rule_init_port_caps(rule);
@@ -27,6 +47,19 @@ void mg_rule_make_apply_x(mg_rule_t *rule, uint32_t rule_id) {
     rule->L_boundary_mask = 0;
 }
 
+/**
+ * Initialize a rule representing a two-qubit CNOT pattern (Q–Q) where the
+ * right-hand side is identical to the left-hand side.
+ *
+ * Sets the rule to a default/empty state, assigns the provided rule_id,
+ * configures L as two qubit nodes connected by a single edge, copies L to R,
+ * sets K_node_mask to 0x3, K_edge_mask to 0x1, establishes K2L/K2R node and
+ * edge mappings for the kernel, sets kernel to MG_KERNEL_CNOT with
+ * kernel_radius 1, and sets L_boundary_mask to 0.
+ *
+ * @param rule Pointer to the mg_rule_t to initialize.
+ * @param rule_id Identifier to assign to the rule.
+ */
 void mg_rule_make_cnot_qwq(mg_rule_t *rule, uint32_t rule_id) {
     mg_zero_buffer(rule, sizeof(*rule));
     mg_rule_init_port_caps(rule);
@@ -51,6 +84,19 @@ void mg_rule_make_cnot_qwq(mg_rule_t *rule, uint32_t rule_id) {
     rule->L_boundary_mask = 0;
 }
 
+/**
+ * Initialize `rule` as the "split" (W) rewrite rule where a 2-qubit L graph
+ * is replaced by a 3-qubit R graph.
+ *
+ * The initialized rule will have L configured with 2 qubit nodes and 1 edge,
+ * R configured with 3 qubit nodes and 2 edges (edges: 0-2 and 2-1), K_node_mask
+ * set to 0x3, K_edge_mask set to 0, K2L/K2R node mappings for nodes 0->0 and
+ * 1->1, kernel set to MG_KERNEL_ISOM_SPLIT with kernel_radius 1,
+ * L_boundary_mask set to 0, and rule_id assigned.
+ *
+ * @param rule Pointer to the mg_rule_t to initialize (output).
+ * @param rule_id Identifier to assign to the rule.
+ */
 void mg_rule_make_split_w(mg_rule_t *rule, uint32_t rule_id) {
     mg_zero_buffer(rule, sizeof(*rule));
     mg_rule_init_port_caps(rule);
