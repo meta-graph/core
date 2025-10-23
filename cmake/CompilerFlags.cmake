@@ -50,8 +50,10 @@ set(METAGRAPH_SECURITY_LINK_FLAGS)
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     list(APPEND METAGRAPH_SECURITY_FLAGS
         -fstack-clash-protection
-        -fcf-protection=full
     )
+    if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64|i[3-6]86")
+        list(APPEND METAGRAPH_SECURITY_FLAGS -fcf-protection=full)
+    endif()
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
     # macOS-specific flags
     # Note: -fstack-clash-protection and -fcf-protection not supported on Apple Clang

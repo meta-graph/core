@@ -23,3 +23,7 @@ set_tests_properties(dpoi_qca_rmg_test PROPERTIES
     TIMEOUT 20
     LABELS "unit;dpoi_qca"
 )
+
+if(METAGRAPH_FUZZING)
+    add_subdirectory(fuzz)
+endif()

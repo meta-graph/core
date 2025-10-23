@@ -1,0 +1,23 @@
+services:
+  fuzz:
+    build:
+      context: ../..
+      dockerfile: docker/fuzz/Dockerfile
+    image: metagraph/fuzzing-rig:latest
+    environment:
+      SOURCE_DIR: /workspace
+      FUZZ_MAX_TOTAL_TIME: "20"
+      FUZZ_TIMEOUT: "30"
+      FUZZ_TARGETS: auto
+      EXTRA_CMAKE_ARGS: ""
+      LIBFUZZER_ARGS: ""
+    volumes:
+      - ../../:/workspace:rw
+      - fuzz-corpus:/home/fuzzer/corpus
+    tmpfs:
+      - /tmp
+    working_dir: /workspace
+    tty: true
+
+volumes:
+  fuzz-corpus:

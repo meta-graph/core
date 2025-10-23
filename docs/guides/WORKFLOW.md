@@ -78,3 +78,30 @@ implementation instead of behaviour.
   toolchain defined in CI (Debug, Release) and executes the identical pipeline,
   leaving no residue unless `--keep-builds` is provided. This is the fastest way
   to rehearse the GitHub Actions quality-matrix job locally.
+
+### Fuzzing Rig (Docker)
+
+- **Nightly fuzz parity** – To mirror the scheduled fuzz workflow locally, run:
+
+  ```bash
+  make fuzz
+  ```
+
+-  The convenience target shells out to `docker compose -f docker/fuzz/docker-compose.yml
+  run --rm fuzz`, builds the `metagraph/fuzzing-rig` image, mounts the repo, and
+  executes every `fuzz-*` target discovered by CMake for 20 seconds each by
+  default. Artifacts and corpora persist under the named volume `fuzz-corpus` (mounted at
+  `/home/fuzzer/corpus` inside the container).
+
+- **Direct compose** – Prefer raw docker commands? Run:
+
+  ```bash
+  docker compose -f docker/fuzz/docker-compose.yml up
+  ```
+
+- **Custom runs** – Override environment variables to tweak behaviour:
+  `FUZZ_TARGETS="bundle-parser graph-traversal"`, `FUZZ_MAX_TOTAL_TIME=600`,
+  `EXTRA_CMAKE_ARGS="-DMETAGRAPH_DEV=ON"`, etc. Use `docker compose run --rm -e
+  KEY=value fuzz` for one-off invocations or `bash` for an interactive shell in
+  the rig. The make shortcuts `make fuzz-rig-shell` and `make fuzz-rig-clean`
+  cover those common cases.

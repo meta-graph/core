@@ -1,4 +1,50 @@
 cmake_minimum_required(VERSION 3.28)
+
+# Detect libFuzzer sanitizer usage early so try_compile avoids linking the
+# libFuzzer runtime during compiler checks.
+set(_mg_fuzzer_flags "")
+foreach(_mg_flag_source IN ITEMS CMAKE_C_FLAGS CMAKE_CXX_FLAGS)
+  if(DEFINED ${_mg_flag_source})
+    list(APPEND _mg_fuzzer_flags "${${_mg_flag_source}}")
+  endif()
+endforeach()
+
+if(DEFINED ENV{CFLAGS})
+  list(APPEND _mg_fuzzer_flags "$ENV{CFLAGS}")
+endif()
+
+if(DEFINED ENV{CXXFLAGS})
+  list(APPEND _mg_fuzzer_flags "$ENV{CXXFLAGS}")
+endif()
+
+set(_mg_require_static_try_compile OFF)
+foreach(_mg_flags IN LISTS _mg_fuzzer_flags)
+  if(_mg_flags MATCHES "-fsanitize=fuzzer")
+    set(_mg_require_static_try_compile ON)
+    break()
+  endif()
+endforeach()
+
+if(_mg_require_static_try_compile)
+  set(CMAKE_TRY_COMPILE_TARGET_TYPE "STATIC_LIBRARY")
+endif()
+
+# Ensure libFuzzer builds do not fail compiler detection during try_compile.
+# Clang injects a main() when -fsanitize=fuzzer is present, which breaks the
+# C compiler check that links a simple program. Replace it with the no-link
+# variant for compile-only checks; the linker flags provided by the build still
+# include -fsanitize=fuzzer so fuzz targets link correctly.
+foreach(_mg_flag_var IN ITEMS CMAKE_C_FLAGS CMAKE_CXX_FLAGS)
+  if(DEFINED ${_mg_flag_var})
+    string(REPLACE "-fsanitize=fuzzer" "-fsanitize=fuzzer-no-link" _mg_adjusted "${${_mg_flag_var}}")
+    if(NOT _mg_adjusted STREQUAL "${${_mg_flag_var}}")
+      message(STATUS "Adjusting ${_mg_flag_var} for libFuzzer try_compile")
+      set(${_mg_flag_var} "${_mg_adjusted}")
+      set(${_mg_flag_var} "${_mg_adjusted}" CACHE STRING "${_mg_flag_var}" FORCE)
+    endif()
+  endif()
+endforeach()
+
 project(MetaGraph VERSION 0.1.0 LANGUAGES C)
 
 # -----------------------------------------------------------------------------

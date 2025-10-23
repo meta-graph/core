@@ -39,6 +39,8 @@ DerivedData/
 build/
 build-*/
 build-asan/
+.docker-fuzz/
+/corpus/
 compile_commands.json
 dist/
 bin/
